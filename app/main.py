@@ -23,6 +23,7 @@ from fastapi.staticfiles import StaticFiles
 from .db import init_db, pool
 from .landsnet import poll_measurements, store_reading, parse_payload
 from .orkugatt import crawl_orkugatt
+from .notifications import parse_notifications, store_notifications, poll_notifications
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 
@@ -41,6 +42,10 @@ async def lifespan(app: FastAPI):
     # hourly at :07
     scheduler.add_job(crawl_orkugatt, CronTrigger(minute=7),
                       id="orkugatt", max_instances=1, coalesce=True)
+    # optional direct notification poll (normally arrives via courier ingest)
+    if os.environ.get("POLL_NOTIFICATIONS", "0") == "1":
+        scheduler.add_job(poll_notifications, CronTrigger(minute="*/5"),
+                          id="notifications", max_instances=1, coalesce=True)
     scheduler.start()
     # run once at startup so the site has data immediately
     await crawl_orkugatt()
@@ -75,6 +80,34 @@ async def ingest(request: Request):
         return JSONResponse({"error": "payload not understood"}, status_code=400)
     result = await store_reading(items)
     return {"ok": True, "stored": result}
+
+
+@app.post("/api/ingest-notifications")
+async def ingest_notifications(request: Request):
+    """Receives the control-room notifications page HTML from the courier."""
+    if not INGEST_TOKEN:
+        return JSONResponse({"error": "server has no INGEST_TOKEN set"}, status_code=503)
+    if request.headers.get("x-ingest-token", "") != INGEST_TOKEN:
+        return JSONResponse({"error": "bad token"}, status_code=401)
+    body = (await request.body()).decode("utf-8", errors="replace")
+    items = parse_notifications(body)
+    if not items:
+        return JSONResponse({"error": "no notifications found in payload"}, status_code=400)
+    result = await store_notifications(items)
+    return {"ok": True, **result}
+
+
+@app.get("/api/notifications")
+async def notifications(days: int = Query(30, ge=1, le=365)):
+    async with pool.connection() as conn:
+        cur = await conn.execute(
+            """SELECT id, ts, short, long, first_seen FROM notifications
+               WHERE ts > now() - make_interval(days => %s)
+               ORDER BY ts DESC""", (days,))
+        rows = await cur.fetchall()
+    return {"notifications": [
+        {"id": str(r[0]), "ts": r[1].isoformat(), "short": r[2],
+         "long": r[3], "first_seen": r[4].isoformat()} for r in rows]}
 
 
 @app.get("/api/load/latest")

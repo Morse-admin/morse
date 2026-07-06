@@ -33,6 +33,16 @@ CREATE TABLE IF NOT EXISTS shifts (
 );
 CREATE INDEX IF NOT EXISTS shifts_ts_idx ON shifts (ts DESC);
 
+-- control-room notifications (Tilkynningar frá stjórnstöð) ------------------
+CREATE TABLE IF NOT EXISTS notifications (
+    id          uuid PRIMARY KEY,           -- Landsnet's own entry GUID
+    ts          timestamptz NOT NULL,       -- event time from the page
+    short       text NOT NULL,
+    long        text,
+    first_seen  timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS notifications_ts_idx ON notifications (ts DESC);
+
 -- hourly snapshots of the Orkugátt outage schedule --------------------------
 CREATE TABLE IF NOT EXISTS outage_snapshots (
     fetched_at  timestamptz PRIMARY KEY,
