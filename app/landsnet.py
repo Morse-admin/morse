@@ -104,6 +104,10 @@ async def store_reading(items: list[dict]) -> dict:
     ts = (m_ts or datetime.now(timezone.utc)).replace(second=0, microsecond=0)
     if total is None:
         log.warning("TOTAL_POWER_FLOW missing from payload — stored raw only")
+    age = (datetime.now(timezone.utc) - ts).total_seconds() / 60
+    if age > 15:
+        log.warning("STALE FEED: newest Landsnet measurement is %.0f min old "
+                    "(ts=%s) — source appears frozen", age, ts.isoformat())
     async with pool.connection() as conn:
         await conn.execute(
             """INSERT INTO load_log (ts, total_mw, total_good, regulating_mw, snid, raw)
