@@ -36,6 +36,43 @@ h1 .thin{color:var(--hydro)}
 .src{margin-top:8px;font-size:13px;color:var(--steam)}
 .src a{color:var(--hydro)}
 
+/* ---------- access bar ---------- */
+.access{margin-top:18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);padding:10px 14px}
+.access .mode{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px}
+.access .mode.free{background:var(--magma-soft);color:var(--magma);border:1px solid var(--magma)}
+.access .mode.livem{background:var(--moss-soft);color:var(--moss);border:1px solid var(--moss)}
+.access .msg{font-size:13.5px;color:var(--steam)}
+.access input{font-family:var(--mono);font-size:13px;padding:5px 8px;border:1px solid var(--line);width:160px}
+.access button{font-family:var(--mono);font-size:12px;font-weight:600;padding:6px 12px;border:1px solid var(--basalt);background:var(--basalt);color:#fff;cursor:pointer}
+.access button:hover{background:var(--hydro);border-color:var(--hydro)}
+.access .err{color:var(--magma);font-family:var(--mono);font-size:12px}
+
+/* ---------- notifications table ---------- */
+.ntbl{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--magma);padding:22px}
+.ntbl h2{font-family:var(--disp);font-size:20px;font-weight:700;margin-bottom:4px}
+.ntbl .sub{font-size:13px;color:var(--steam);margin-bottom:12px}
+.ntbl .scroll{max-height:340px;overflow-y:auto;border-top:1.5px solid var(--basalt)}
+table.notifs{width:100%;border-collapse:collapse;font-size:13.5px}
+table.notifs th{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--steam);text-align:left;padding:8px 10px 6px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+table.notifs td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+table.notifs td.mono{font-family:var(--mono);font-size:12px;white-space:nowrap}
+table.notifs td.lag{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--magma);font-weight:600}
+table.notifs td.lag.fast{color:var(--moss)}
+table.notifs tr:hover td{background:#fff}
+.ntbl .foot2{font-size:11.5px;color:var(--steam);margin-top:8px}
+
+/* ---------- live consumption panel ---------- */
+.live{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--hydro);padding:22px 22px 18px}
+.live .big{font-family:var(--disp);font-weight:700;font-size:clamp(30px,5vw,44px);line-height:1;color:var(--hydro);font-variant-numeric:tabular-nums}
+.live .big small{font-size:.42em;font-weight:600;color:var(--basalt)}
+.lcons{fill:none;stroke:var(--hydro);stroke-width:2;stroke-linejoin:round}
+.lconsarea{fill:var(--hydro);opacity:.08}
+.notifline{stroke:var(--magma);stroke-width:1.5;stroke-dasharray:3 3}
+.notifdot{fill:var(--magma);stroke:#fff;stroke-width:1.5;cursor:pointer}
+.livedot{fill:var(--hydro);stroke:#fff;stroke-width:2;pointer-events:none}
+.live .peak{font-family:var(--mono);font-size:12px;color:var(--steam);text-align:right}
+.live .peak b{color:var(--hydro)}
+
 /* ---------- hourly day profile ---------- */
 .h48{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--basalt);padding:22px 22px 18px}
 .h48-head{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between}
@@ -70,7 +107,7 @@ h1 .thin{color:var(--hydro)}
 .scrub .ends{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--steam);margin-top:2px;padding:0 42px}
 .sliderline{display:flex;align-items:center;gap:8px;margin-top:8px}
 .sliderline input[type=range]{flex:1;margin:0;accent-color:var(--magma);cursor:pointer}
-.stepbtn{font-family:var(--mono);font-weight:600;font-size:14px;line-height:1;width:34px;height:30px;border:1px solid var(--line);background:#fff;color:var(--basalt);cursor:pointer;flex:none}
+.stepbtn{font-family:var(--mono);font-weight:600;font-size:12px;line-height:1;padding:0 10px;height:30px;white-space:nowrap;border:1px solid var(--line);background:#fff;color:var(--basalt);cursor:pointer;flex:none}
 .stepbtn:hover{border-color:var(--magma);color:var(--magma)}
 .stepbtn:active{background:var(--magma-soft)}
 .stepbtn:disabled{opacity:.35;cursor:default;border-color:var(--line);color:var(--steam)}
@@ -136,6 +173,38 @@ h1 .thin{color:var(--hydro)}
   <div class="src">Outage schedule mirrored from the Orkugátt portal · <b id="stamp">loading…</b>. MW impact figures are added estimates from publicly listed unit capacities — see notes below.</div>
 </header>
 
+<div class="access" id="accessBar" style="display:none">
+  <span class="mode" id="accessMode">…</span>
+  <span class="msg" id="accessMsg"></span>
+  <span id="loginBox" style="display:none">
+    <input type="password" id="pw" placeholder="access password">
+    <button id="loginBtn">Unlock live</button>
+    <span class="err" id="loginErr"></span>
+  </span>
+  <button id="logoutBtn" style="display:none">Log out</button>
+</div>
+
+<section class="live" id="livePanel" style="display:none">
+  <div class="h48-head">
+    <div>
+      <div class="eyebrow">Heildarflutningur · live · last 12 hours · <span style="color:var(--magma)">◆</span> = control-room notification</div>
+      <div class="big"><span id="liveNow">–</span><small> MW total flow</small></div>
+    </div>
+    <div class="peak" id="livePeak"></div>
+  </div>
+  <div class="chart-wrap" id="liveWrap"></div>
+  <div class="htip" id="ltip">Hover the line for values · hover a ◆ for the notification.</div>
+</section>
+
+<section class="ntbl" id="notifPanel" style="display:none">
+  <h2>Control-room events — occurred vs published</h2>
+  <div class="sub">Tilkynningar frá stjórnstöð · "Lag" is how long Landsnet took to publish the event on their page (measured by this site's monitor).</div>
+  <div class="scroll"><table class="notifs"><thead>
+    <tr><th>Occurred</th><th>Published</th><th>Lag</th><th>Notification</th></tr>
+  </thead><tbody id="notifRows"></tbody></table></div>
+  <div class="foot2" id="notifFoot">Entries older than the monitor itself show the archive-import moment as "published", so their lag is not meaningful.</div>
+</section>
+
 <section class="h48">
   <div class="h48-head">
     <div>
@@ -159,9 +228,9 @@ h1 .thin{color:var(--hydro)}
       <div class="lbl" style="font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steam)">Pick a day</div>
       <div class="date" id="dateLbl"></div>
       <div class="sliderline">
-        <button class="stepbtn" id="dayPrev" aria-label="One day back">−1</button>
+        <button class="stepbtn" id="dayPrev">‹ Previous day</button>
         <input type="range" id="daySlider" min="0" max="178" value="0" aria-label="Select date">
-        <button class="stepbtn" id="dayNext" aria-label="One day forward">+1</button>
+        <button class="stepbtn" id="dayNext">Next day ›</button>
       </div>
       <div class="ends"><span id="endL"></span><span id="endR"></span></div>
     </div>
@@ -317,11 +386,12 @@ async function boot(){
  const stamp=document.getElementById("stamp");
  try{
   const r=await fetch("data.json",{cache:"no-store"});
+  if(r.status===404){D=[];document.getElementById("stamp").textContent="free preview: public outage data not yet available — log in for live";initTime();renderList();return;}
   if(!r.ok)throw new Error(r.status);
   const j=await r.json();
   D=j.operations.map(mapRaw).filter(Boolean);
   if(D.length<10)throw new Error("too few records");
-  stamp.textContent="data fetched "+new Date(j.fetchedAt).toLocaleString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
+  stamp.textContent=(j.delayed?"FREE PREVIEW (72 h delay) · ":"")+"data fetched "+new Date(j.fetchedAt).toLocaleString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
  }catch(e){
   D=FALLBACK.slice();
   stamp.textContent="built-in snapshot of 06 Jul 2026 (live data.json unavailable)";
@@ -517,6 +587,157 @@ function renderDayChart(dayStart){
   tip.innerHTML=`${hh(h.t.getHours())}–${hh((h.t.getHours()+1)%24)} → <b>${h.sum} MW offline</b> <span class="stns">${h.parts.length?"· "+h.parts.map(p=>(NAMES[p.k]||p.k)+" −"+p.v).join(", "):"· no generation outages"}</span>`;
  };
 }
+
+/* ---------------- live consumption panel (12 h, 5-min points) ------------- */
+async function loadLive(){
+ let load,notifs=[];
+ try{
+  const r=await fetch("api/load?hours=12",{cache:"no-store"});
+  if(!r.ok)throw 0;
+  const jl=await r.json();
+  window.__loadDelayed=jl.delayed;
+  load=jl.points.filter(p=>p.total_mw!=null);
+  if(load.length<2)throw 0;
+ }catch(e){return} // no backend (e.g. file opened standalone) — keep panel hidden
+ let delayed=false;
+ try{
+  const r2=await fetch("api/load?hours=12",{cache:"no-store"});
+ }catch(e){}
+ try{
+  const rn=await fetch("api/notifications?days=2",{cache:"no-store"});
+  if(rn.ok){const jn=await rn.json();notifs=jn.notifications;delayed=jn.delayed;}
+ }catch(e){}
+ document.getElementById("livePanel").style.display="";
+
+ const t1=new Date(load[load.length-1].ts).getTime(), t0=t1-12*36e5;
+ const pts=load.map(p=>({t:new Date(p.ts).getTime(),v:p.total_mw})).filter(p=>p.t>=t0);
+ const vals=pts.map(p=>p.v);
+ const vmax=Math.max(...vals),vmin=Math.min(...vals);
+ const ymin=Math.max(0,Math.floor((vmin-20)/10)*10);
+ const ymax=Math.max(ymin+40,Math.ceil((vmax+20)/10)*10);
+ const range=ymax-ymin;
+ const step=[10,20,25,50,100,200,500].find(s=>range/s<=6)||500;
+ const W=960,H=230,L=56,R=14,T=18,B=32,PW=W-L-R,PH=H-T-B;
+ const x=t=>L+((t-t0)/(t1-t0))*PW;
+ const y=v=>T+PH-((v-ymin)/range)*PH;
+ let svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Total flow, last 12 hours">`;
+ for(let v=Math.ceil(ymin/step)*step;v<=ymax;v+=step){
+  svg+=`<line class="hgrid" x1="${L}" y1="${y(v)}" x2="${W-R}" y2="${y(v)}"/>`;
+  svg+=`<text class="aylbl" x="${L-7}" y="${y(v)+3}" text-anchor="end">${v}</text>`;
+ }
+ const firstTick=new Date(t0);firstTick.setMinutes(0,0,0);
+ for(let t=firstTick.getTime();t<=t1;t+=36e5){
+  const d=new Date(t);
+  if(d.getHours()%2===0&&t>=t0)
+   svg+=`<text class="axlbl" x="${x(t)}" y="${H-14}" text-anchor="middle">${String(d.getHours()).padStart(2,"0")}:00</text>`;
+ }
+ let dL=pts.map((p,i)=>`${i?"L":"M"} ${x(p.t).toFixed(1)} ${y(p.v).toFixed(1)}`).join(" ");
+ svg+=`<path class="lconsarea" d="${dL} L ${x(pts[pts.length-1].t)} ${T+PH} L ${x(pts[0].t)} ${T+PH} Z"/>`;
+ svg+=`<path class="lcons" d="${dL}"/>`;
+ /* control-room notifications inside the window */
+ const inWin=notifs.map(n=>({...n,t:new Date(n.ts).getTime()})).filter(n=>n.t>=t0&&n.t<=t1);
+ inWin.forEach((n,i)=>{
+  svg+=`<line class="notifline" x1="${x(n.t)}" y1="${T}" x2="${x(n.t)}" y2="${T+PH}"/>`;
+  svg+=`<circle class="notifdot" data-n="${i}" cx="${x(n.t)}" cy="${T+6}" r="6"/>`;
+ });
+ svg+=`<circle class="livedot" id="livedot" r="4" style="display:none"/>`;
+ for(let i=0;i<pts.length;i++){
+  const x0=i===0?L:(x(pts[i-1].t)+x(pts[i].t))/2, x1=i===pts.length-1?W-R:(x(pts[i].t)+x(pts[i+1].t))/2;
+  svg+=`<rect class="hhit" data-p="${i}" x="${x0.toFixed(1)}" y="${T}" width="${(x1-x0).toFixed(1)}" height="${PH}"/>`;
+ }
+ svg+=`<line class="hgrid" x1="${L}" y1="${T+PH}" x2="${W-R}" y2="${T+PH}" style="stroke:var(--basalt);stroke-width:1.5"/>`;
+ svg+=`</svg>`;
+ document.getElementById("liveWrap").innerHTML=svg;
+ const cur=pts[pts.length-1];
+ const isDelayed=!!window.__loadDelayed;
+ const ageMin=Math.round((Date.now()-cur.t)/6e4);
+ const stale=!isDelayed&&ageMin>15;
+ const nowEl=document.getElementById("liveNow");
+ nowEl.textContent=cur.v.toLocaleString("en-GB",{maximumFractionDigits:1});
+ nowEl.style.opacity=stale?".35":"1";
+ document.getElementById("livePeak").innerHTML=
+  (isDelayed?`<span style="color:var(--magma);font-weight:600">FREE PREVIEW — delayed ${Math.round(DELAY_H)} h · log in for live</span><br>`:"")+
+  (stale?`<span style="color:var(--magma);font-weight:600">⚠ last reading ${ageMin>120?Math.round(ageMin/60)+" h":ageMin+" min"} old — feed may be frozen</span><br>`:"")+
+  `12 h low <b style="color:var(--basalt)">${vmin.toFixed(0)} MW</b> · high <b>${vmax.toFixed(0)} MW</b><br>updated ${new Date(cur.t).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})} · ${inWin.length} notification${inWin.length===1?"":"s"}`;
+ const tip=document.getElementById("ltip"),dot=document.getElementById("livedot");
+ const hhmm=t=>new Date(t).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+ document.getElementById("liveWrap").onmousemove=e=>{
+  const nd=e.target.closest(".notifdot");
+  if(nd){
+   const n=inWin[+nd.dataset.n];
+   tip.innerHTML=`<b>◆ ${hhmm(n.t)}</b> ${n.short}${n.long?` <span class="stns">— ${n.long}</span>`:""}`;
+   return;
+  }
+  const r=e.target.closest(".hhit");if(!r)return;
+  const p=pts[+r.dataset.p];
+  dot.style.display="";dot.setAttribute("cx",x(p.t));dot.setAttribute("cy",y(p.v));
+  tip.innerHTML=`${hhmm(p.t)} → <b style="color:var(--hydro)">${p.v.toLocaleString("en-GB",{maximumFractionDigits:1})} MW</b> total flow`;
+ };
+}
+loadLive();
+setInterval(loadLive,5*60*1000);
+
+
+/* ---------------- access control + notifications table -------------------- */
+let AUTHED=false, DELAY_H=72, MONITOR_START=null;
+async function initAccess(){
+ const bar=document.getElementById("accessBar");
+ try{
+  const r=await fetch("api/me",{cache:"no-store"});
+  if(!r.ok)return; // static hosting without backend: keep bar hidden
+  const j=await r.json();
+  AUTHED=j.authed; DELAY_H=j.free_delay_hours||72;
+ }catch(e){return}
+ bar.style.display="";
+ const mode=document.getElementById("accessMode"),msg=document.getElementById("accessMsg");
+ if(AUTHED){
+  mode.textContent="LIVE";mode.className="mode livem";
+  msg.textContent="You are seeing real-time data.";
+  document.getElementById("logoutBtn").style.display="";
+ }else{
+  mode.textContent="FREE PREVIEW";mode.className="mode free";
+  msg.textContent=`All data on this page is delayed ${Math.round(DELAY_H)} hours. Unlock for live data:`;
+  document.getElementById("loginBox").style.display="";
+ }
+ document.getElementById("loginBtn").onclick=async()=>{
+  const pw=document.getElementById("pw").value;
+  const r=await fetch("api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pw})});
+  if(r.ok)location.reload();
+  else document.getElementById("loginErr").textContent=r.status===401?"wrong password":"login unavailable";
+ };
+ document.getElementById("pw").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("loginBtn").click()});
+ document.getElementById("logoutBtn").onclick=async()=>{await fetch("api/logout",{method:"POST"});location.reload();};
+}
+
+async function loadNotifTable(){
+ let data;
+ try{
+  const r=await fetch("api/notifications?days=30",{cache:"no-store"});
+  if(!r.ok)return;
+  data=await r.json();
+ }catch(e){return}
+ const rows=data.notifications;
+ if(!rows||!rows.length)return;
+ document.getElementById("notifPanel").style.display="";
+ const fmt=iso=>new Date(iso).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+ const lagTxt=m=>m<0?"—":m<60?m+" min":m<48*60?(m/60).toFixed(1)+" h":Math.round(m/1440)+" d";
+ // entries ingested in the initial archive import share (almost) one first_seen;
+ // detect that moment as the monitor start and blank their lag
+ const seen={};rows.forEach(n=>{const k=n.first_seen.slice(0,16);seen[k]=(seen[k]||0)+1;});
+ const bulk=Object.entries(seen).sort((a,b)=>b[1]-a[1])[0];
+ const bulkKey=bulk&&bulk[1]>5?bulk[0]:null;
+ document.getElementById("notifRows").innerHTML=rows.map(n=>{
+  const isBulk=bulkKey&&n.first_seen.slice(0,16)===bulkKey;
+  const lag=isBulk?'<td class="mono" style="color:var(--steam)">—</td>'
+   :`<td class="lag${n.publish_lag_min<=15?" fast":""}">${lagTxt(n.publish_lag_min)}</td>`;
+  return `<tr><td class="mono">${fmt(n.ts)}</td><td class="mono">${isBulk?"(archive import)":fmt(n.first_seen)}</td>${lag}<td>${n.short}${n.long?` <span style="color:var(--steam)">— ${n.long}</span>`:""}</td></tr>`;
+ }).join("");
+ if(data.delayed)document.getElementById("notifFoot").textContent=
+  "Free preview: events shown only once older than "+Math.round(DELAY_H)+" hours. "+document.getElementById("notifFoot").textContent;
+}
+initAccess().then(loadNotifTable);
+setInterval(loadNotifTable,5*60*1000);
+
 </script>
 </body>
 </html>
