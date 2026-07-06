@@ -16,12 +16,12 @@ from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .db import init_db, pool
-from .landsnet import poll_measurements
+from .landsnet import poll_measurements, store_reading, parse_payload
 from .orkugatt import crawl_orkugatt
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -32,16 +32,20 @@ scheduler = AsyncIOScheduler(timezone="UTC")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
-    # every 5 minutes, on the clock (…:00, :05, :10…)
-    scheduler.add_job(poll_measurements, CronTrigger(minute="*/5"),
-                      id="measurements", max_instances=1, coalesce=True)
+    # every 5 minutes, on the clock (…:00, :05, :10…).
+    # Landsnet 403s datacenter IPs, so this is OFF unless POLL_MEASUREMENTS=1;
+    # measurements normally arrive via POST /api/ingest from a home fetcher.
+    if os.environ.get("POLL_MEASUREMENTS", "0") == "1":
+        scheduler.add_job(poll_measurements, CronTrigger(minute="*/5"),
+                          id="measurements", max_instances=1, coalesce=True)
     # hourly at :07
     scheduler.add_job(crawl_orkugatt, CronTrigger(minute=7),
                       id="orkugatt", max_instances=1, coalesce=True)
     scheduler.start()
-    # run both once at startup so the site has data immediately
+    # run once at startup so the site has data immediately
     await crawl_orkugatt()
-    await poll_measurements()
+    if os.environ.get("POLL_MEASUREMENTS", "0") == "1":
+        await poll_measurements()
     yield
     scheduler.shutdown(wait=False)
     await pool.close()
@@ -53,6 +57,24 @@ app = FastAPI(title="morse.is backend", lifespan=lifespan)
 @app.get("/healthz")
 async def healthz():
     return {"ok": True}
+
+
+INGEST_TOKEN = os.environ.get("INGEST_TOKEN", "")
+
+
+@app.post("/api/ingest")
+async def ingest(request: Request):
+    """Receives the Landsnet measurements payload from the home fetcher."""
+    if not INGEST_TOKEN:
+        return JSONResponse({"error": "server has no INGEST_TOKEN set"}, status_code=503)
+    if request.headers.get("x-ingest-token", "") != INGEST_TOKEN:
+        return JSONResponse({"error": "bad token"}, status_code=401)
+    body = (await request.body()).decode("utf-8", errors="replace")
+    items = parse_payload(body)
+    if not items:
+        return JSONResponse({"error": "payload not understood"}, status_code=400)
+    result = await store_reading(items)
+    return {"ok": True, "stored": result}
 
 
 @app.get("/api/load/latest")
