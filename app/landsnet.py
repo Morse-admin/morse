@@ -98,31 +98,12 @@ def extract_series(items: list[dict]):
     return ts, total, total_good, regulating, snid
 
 
-async def poll_measurements() -> None:
-    """Fetch, store, and check for shifts. Called every 5 minutes."""
-    try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            r = await client.get(MEASUREMENTS_URL, headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                              "AppleWebKit/537.36 (KHTML, like Gecko) "
-                              "Chrome/126.0.0.0 Safari/537.36",
-                "Accept": "application/json",
-                "Accept-Language": "en-US,en;q=0.9",
-                "Referer": "https://amper.landsnet.is/"})
-            r.raise_for_status()
-            items = parse_payload(r.text)
-    except Exception as exc:  # network/format failure: log, keep history intact
-        log.error("measurement poll failed: %s", exc)
-        return
-    if not items:
-        log.error("measurement payload empty/unparseable — skipped")
-        return
-
+async def store_reading(items: list[dict]) -> dict:
+    """Extract + store one payload (from the poller OR the /api/ingest door)."""
     m_ts, total, total_good, regulating, snid = extract_series(items)
     ts = (m_ts or datetime.now(timezone.utc)).replace(second=0, microsecond=0)
     if total is None:
         log.warning("TOTAL_POWER_FLOW missing from payload — stored raw only")
-
     async with pool.connection() as conn:
         await conn.execute(
             """INSERT INTO load_log (ts, total_mw, total_good, regulating_mw, snid, raw)
@@ -132,6 +113,25 @@ async def poll_measurements() -> None:
         )
         if total is not None:
             await detect_shift(conn, ts, total, snid)
+    return {"ts": ts.isoformat(), "total_mw": total, "snid_count": len(snid)}
+
+
+async def poll_measurements() -> None:
+    """Fetch directly from Landsnet. NOTE: blocked (403) from datacenter IPs —
+    kept for the day that changes; disable with POLL_MEASUREMENTS=0."""
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.get(MEASUREMENTS_URL, headers={
+                "User-Agent": USER_AGENT, "Accept": "application/json"})
+            r.raise_for_status()
+            items = parse_payload(r.text)
+    except Exception as exc:
+        log.error("measurement poll failed: %s", exc)
+        return
+    if not items:
+        log.error("measurement payload empty/unparseable — skipped")
+        return
+    await store_reading(items)
 
 
 async def detect_shift(conn, ts, total: float, snid: dict) -> None:
