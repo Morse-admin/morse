@@ -42,8 +42,9 @@ header{padding:34px 0 22px;border-bottom:2px solid var(--basalt);position:relati
 .langsw button.on{border-color:var(--hydro);filter:none;opacity:1}
 .langsw button:hover{filter:none;opacity:1}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steam)}
-h1{font-family:var(--disp);font-weight:800;font-size:clamp(14px,5.6vw,40px);letter-spacing:-.01em;line-height:1.15;margin-top:6px;white-space:nowrap}
-h1 .thin{color:var(--hydro)}
+h1{margin-top:6px}
+.logo-main{font-family:var(--disp);font-weight:800;font-size:clamp(44px,15vw,92px);line-height:.92;letter-spacing:-.02em;color:var(--basalt);white-space:nowrap}
+.logo-sub{font-family:var(--disp);font-weight:600;font-size:clamp(13px,4.6vw,24px);letter-spacing:.32em;color:var(--basalt);text-transform:uppercase;white-space:nowrap;margin-top:8px}
 .src{margin-top:8px;font-size:13px;color:var(--steam)}
 .src a{color:var(--hydro)}
 
@@ -223,7 +224,7 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
     <div class="langsw"><button id="langIS" title="Íslenska">🇮🇸</button><button id="langEN" title="English">🇬🇧</button></div>
   </div>
   <div class="eyebrow" data-i18n="eyebrow"></div>
-  <h1><span id="mt1">MORSE</span> <span class="thin" id="mt2">— SKÝR SKILABOÐ</span></h1>
+  <h1><div class="logo-main" id="mt1">MORSE</div><div class="logo-sub" id="mt2">SKÝR SKILABOÐ</div></h1>
   <div class="src"><span data-i18n="src1"></span> <b id="stamp">…</b> <span data-i18n="src2"></span></div>
 </header>
 
@@ -935,38 +936,6 @@ async function loadNotifTable(){
 }
 initAccess().then(loadNotifTable);
 setInterval(loadNotifTable,5*60*1000);
-
-
-/* ---------------- title: morse → text, two light batches (no rAF loop) ---- */
-(function(){
- const mt1=document.getElementById("mt1"), mt2=document.getElementById("mt2");
- const final1=mt1.textContent, final2=mt2.textContent;
- if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
-
- // Real International Morse Code (Icelandic-only letters mapped to their
- // closest Latin equivalent: Ý→Y, Ð→D) — just two textContent swaps total,
- // so this never competes with chart-building work on the main thread.
- const morse1="-- --- .-. ... .";                                    // MORSE
- const morse2="... -.- -.-- .-. / ... -.- .. .-.. .- -... --- -..";  // SKÝR SKILABOÐ
-
- const h1=mt1.parentElement;
- h1.style.whiteSpace="normal";              // morse code is much longer — let it wrap
- mt1.style.fontFamily=mt2.style.fontFamily="var(--mono)";
- mt1.style.fontSize=mt2.style.fontSize="0.42em";
- mt1.style.fontWeight=mt2.style.fontWeight="500";
- mt1.textContent=morse1;
- mt2.textContent=morse2;
-
- setTimeout(()=>{
-  mt1.style.fontFamily=mt1.style.fontSize=mt1.style.fontWeight="";
-  mt1.textContent=final1;
- }, 1400);
- setTimeout(()=>{
-  mt2.style.fontFamily=mt2.style.fontSize=mt2.style.fontWeight="";
-  mt2.textContent=final2;
-  h1.style.whiteSpace="";                   // back to the single-line brand lockup
- }, 2600);
-})();
 
 
 /* ---------------- grid events: cluster shifts + narrate -------------------- */
