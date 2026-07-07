@@ -163,6 +163,30 @@ async def ingest_notifications(request: Request):
 
 
 # ------------------------------------------------------- data (gated) ----
+@app.post("/api/admin/reextract-snid")
+async def reextract_snid(request: Request):
+    """One-time repair: re-run snið extraction over stored raw payloads."""
+    if not INGEST_TOKEN or request.headers.get("x-ingest-token", "") != INGEST_TOKEN:
+        return JSONResponse({"error": "bad token"}, status_code=401)
+    import json as _json
+    from .landsnet import extract_series
+    fixed = 0
+    async with pool.connection() as conn:
+        cur = await conn.execute(
+            "SELECT ts, raw FROM load_log WHERE snid = '{}'::jsonb OR snid IS NULL")
+        rows = await cur.fetchall()
+        for ts, raw in rows:
+            if not raw:
+                continue
+            _, _, _, regulating, snid = extract_series(raw)
+            if snid:
+                await conn.execute(
+                    "UPDATE load_log SET snid = %s::jsonb, regulating_mw = COALESCE(regulating_mw, %s) WHERE ts = %s",
+                    (_json.dumps(snid), regulating, ts))
+                fixed += 1
+    return {"ok": True, "rows_checked": len(rows), "rows_repaired": fixed}
+
+
 @app.get("/api/load/latest")
 async def load_latest(request: Request):
     cut = cutoff_for(request)

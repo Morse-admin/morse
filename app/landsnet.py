@@ -41,7 +41,16 @@ SHIFT_WINDOW_MIN = int(os.environ.get("SHIFT_WINDOW_MIN", "15"))
 
 TOTAL_KEY = "TOTAL_POWER_FLOW"
 REGULATING_KEY = "REGULATING_POWER"
-SNID_PREFIXES = ("SNIÐ", "SNID")
+
+
+def fix_mojibake(s: str) -> str:
+    """Heal UTF-8 text that was mis-decoded as Latin-1 somewhere upstream
+    (e.g. 'SNIÃ\x90_I' → 'SNIÐ_I'). Harmless on already-clean text."""
+    try:
+        repaired = s.encode("latin-1").decode("utf-8")
+        return repaired if repaired != s else s
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return s
 
 
 def parse_payload(text: str) -> list[dict]:
@@ -87,13 +96,14 @@ def extract_series(items: list[dict]):
         mw = it.get("MW")
         if not isinstance(mw, (int, float)):
             continue
+        key = fix_mojibake(key)
         if key == TOTAL_KEY:
             total = float(mw)
             total_good = bool(it.get("good"))
             ts = parse_ts(it.get("time"))
         elif key == REGULATING_KEY:
             regulating = float(mw)
-        elif key.upper().startswith(SNID_PREFIXES):
+        elif key.upper().startswith("SNI"):   # SNIÐ_*, tolerant of any Ð damage
             snid[key] = float(mw)
     return ts, total, total_good, regulating, snid
 
