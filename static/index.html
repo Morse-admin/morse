@@ -937,66 +937,30 @@ initAccess().then(loadNotifTable);
 setInterval(loadNotifTable,5*60*1000);
 
 
-/* ---------------- title: morse → text, calm reveal (no flicker at all) ---- */
+/* ---------------- title: morse → text, two light batches (no rAF loop) ---- */
 (function(){
- const parts=[document.getElementById("mt1"),document.getElementById("mt2")];
- const finals=parts.map(el=>el.textContent);
+ const mt1=document.getElementById("mt1"), mt2=document.getElementById("mt2");
+ const final1=mt1.textContent, final2=mt2.textContent;
  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
 
- const DUR=6000;          // total decode time
- const rnd=()=>Math.random()<.55?"·":"−";
- const ease=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;   // easeInOutCubic — gentle start & landing
+ // Real International Morse Code (Icelandic-only letters mapped to their
+ // closest Latin equivalent: Ý→Y, Ð→D) — just two textContent swaps total,
+ // so this never competes with chart-building work on the main thread.
+ const morse1="-- --- .-. ... .";                                    // MORSE
+ const morse2="... -.- -.-- .-. / ... -.- .. .-.. .- -... --- -..";  // SKÝR SKILABOÐ
 
- // Split each part into one <span> per character, sized to that character's
- // OWN final rendered width. Total line width is therefore identical from
- // the very first frame, so nothing ever reflows or shifts sideways.
- const chars=[];
- parts.forEach((el,pi)=>{
-  el.style.display="inline-flex";
-  el.style.whiteSpace="nowrap";
-  const frag=document.createDocumentFragment();
-  for(const ch of finals[pi]){
-   if(ch===" "){ frag.appendChild(document.createTextNode("\u00A0")); continue; }
-   const span=document.createElement("span");
-   span.textContent=ch;
-   span.style.display="inline-block";
-   span.style.textAlign="center";
-   span.style.transition="color .4s ease";
-   span.style.color="var(--line)";           // muted while still "encoded"
-   frag.appendChild(span);
-   chars.push({span,ch});
-  }
-  el.textContent="";
-  el.appendChild(frag);
- });
- chars.forEach(o=>{ o.span.style.width=o.span.getBoundingClientRect().width+"px"; });
+ const h1=mt1.parentElement;
+ h1.style.whiteSpace="normal";              // morse code is much longer — let it wrap
+ mt1.style.fontFamily=mt2.style.fontFamily="var(--mono)";
+ mt1.textContent=morse1;
+ mt2.textContent=morse2;
 
- // Each character gets exactly ONE morse symbol, chosen once and never
- // re-randomized — nothing flickers. It simply sits there, muted, until its
- // turn comes, then swaps to the real letter and fades to full ink color.
- // Settle times are staggered left→right on an eased curve for a calm sweep.
- const N=chars.length;
- chars.forEach((o,i)=>{
-  const base=N>1?i/(N-1):1;
-  o.settleAt=ease(base)*DUR*0.92+Math.random()*DUR*0.04;
-  o.span.textContent=rnd();
- });
-
- const t0=performance.now();
- function frame(now){
-  const elapsed=now-t0;
-  let unsettled=false;
-  for(const o of chars){
-   if(elapsed>=o.settleAt){
-    if(o.span.textContent!==o.ch){ o.span.textContent=o.ch; o.span.style.color=""; }
-    continue;
-   }
-   unsettled=true;
-  }
-  if(unsettled)requestAnimationFrame(frame);
-  else chars.forEach(o=>{o.span.textContent=o.ch;o.span.style.color="";o.span.style.width="";});
- }
- requestAnimationFrame(frame);
+ setTimeout(()=>{ mt1.style.fontFamily=""; mt1.textContent=final1; }, 1400);
+ setTimeout(()=>{
+  mt2.style.fontFamily="";
+  mt2.textContent=final2;
+  h1.style.whiteSpace="";                   // back to the single-line brand lockup
+ }, 2600);
 })();
 
 
