@@ -893,12 +893,13 @@ setInterval(loadNotifTable,5*60*1000);
   el.style.whiteSpace="nowrap";
   const frag=document.createDocumentFragment();
   for(const ch of finals[pi]){
+   if(ch===" "){ frag.appendChild(document.createTextNode("\u00A0")); continue; }
    const span=document.createElement("span");
    span.textContent=ch;
    span.style.display="inline-block";
-   if(ch!==" ")span.style.textAlign="center";
+   span.style.textAlign="center";
    frag.appendChild(span);
-   if(ch!==" ")chars.push({span,ch});
+   chars.push({span,ch});
   }
   el.textContent="";
   el.appendChild(frag);
