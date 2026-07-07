@@ -108,14 +108,15 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .h48 .big small{font-size:.42em;font-weight:600;color:var(--basalt)}
 .h48 .peak{font-family:var(--mono);font-size:12px;color:var(--steam);text-align:right}
 .h48 .peak b{color:var(--magma)}
-.hoverbig{font-family:var(--disp);font-weight:800;font-size:clamp(24px,3.4vw,34px);line-height:1.25;color:var(--basalt);min-height:50px;margin-top:2px;font-variant-numeric:tabular-nums}
-.h48 .hoverbig b{color:var(--magma)}
-.hoverbig .stns{display:block;font-family:var(--mono);font-size:12.5px;font-weight:400;color:var(--steam);margin-top:3px}
-.sidebig{font-family:var(--disp);font-weight:800;font-size:clamp(24px,3.4vw,34px);line-height:1.1;font-variant-numeric:tabular-nums}
-.sidebig small{font-size:.5em;font-weight:600;color:var(--basalt)}
-.live .sidebig{color:var(--hydro)}
-.h48 .sidebig{color:var(--magma)}
-.peak .sidebig{display:block;margin-bottom:4px}
+.metric-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:24px 32px}
+.hero{min-width:230px}
+.hero .val{font-family:var(--disp);font-weight:800;font-size:clamp(30px,4.8vw,46px);line-height:1;color:var(--basalt);font-variant-numeric:tabular-nums;white-space:nowrap}
+.live .hero .val{color:var(--hydro)}
+.h48 .hero .val{color:var(--magma)}
+.hero .sub{font-family:var(--sans);font-size:13.5px;color:var(--steam);margin-top:8px}
+.ctx{display:flex;flex-direction:column;gap:6px;text-align:right;font-family:var(--mono);font-size:12.5px;color:var(--steam);white-space:nowrap;padding-top:6px}
+.ctx b{color:var(--basalt);font-weight:600;font-variant-numeric:tabular-nums}
+.ctx .ctx-note{color:var(--steam);opacity:.8}
 .chart-wrap{margin-top:14px;position:relative}
 .chart-wrap svg{display:block;width:100%;height:auto}
 .hgrid{stroke:var(--line-soft);stroke-width:1}
@@ -227,9 +228,12 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 </header>
 
 <section class="live" id="livePanel" style="display:none">
-  <div class="h48-head">
-    <div class="hoverbig" id="ltip" style="flex:1;min-width:260px"></div>
-    <div class="peak"><span class="sidebig"><span id="liveNow">–</span> <small><span data-i18n="liveUnit"></span></small></span><span id="livePeak"></span></div>
+  <div class="metric-row">
+    <div class="hero">
+      <div class="val" id="liveHeroVal">–</div>
+      <div class="sub" id="liveHeroSub"></div>
+    </div>
+    <div class="ctx" id="liveCtx"></div>
   </div>
   <div class="chart-wrap" id="liveWrap"></div>
   <div class="eyebrow belowchart"><span data-i18n="liveEye1"></span> <span style="color:var(--magma)">◆</span> <span data-i18n="liveEye2"></span></div>
@@ -251,9 +255,12 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 </section>
 
 <section class="h48">
-  <div class="h48-head">
-    <div class="hoverbig" id="htip" style="flex:1;min-width:260px"></div>
-    <div class="peak"><span class="sidebig"><span id="h48now">0</span> <small><span data-i18n="peakUnit"></span></small></span><span id="h48peak"></span></div>
+  <div class="metric-row">
+    <div class="hero">
+      <div class="val" id="h48HeroVal">–</div>
+      <div class="sub" id="h48HeroSub"></div>
+    </div>
+    <div class="ctx" id="h48Ctx"></div>
   </div>
   <div class="chart-wrap" id="chartWrap"></div>
   <div class="eyebrow belowchart"><span data-i18n="hourly1"></span> <span id="h48from"></span><span data-i18n="hourly2"></span></div>
@@ -333,6 +340,17 @@ function fmtDate(d,opts={}){
  return s;
 }
 function fmtTime(d){return LANG==="is"?hh2(d.getHours())+":"+hh2(d.getMinutes()):d.toLocaleTimeString(LOC(),{hour:"2-digit",minute:"2-digit",hour12:false});}
+/* Manual number formatter — same rationale as fmtDate: don't trust the
+   browser's is-IS number grouping. Icelandic uses "." for thousands and
+   "," for the decimal mark (the opposite of English). */
+function fmtNum(value,decimals=0){
+ if(value==null||isNaN(value))return "–";
+ const neg=value<0; value=Math.abs(value);
+ const [intPart,decPart]=value.toFixed(decimals).split(".");
+ const grouped=intPart.replace(/\B(?=(\d{3})+(?!\d))/g, LANG==="is"?".":",");
+ const out=grouped+(decPart?(LANG==="is"?",":".")+decPart:"");
+ return (neg?"-":"")+out;
+}
 const I18N={ /* [íslenska, English] */
  eyebrow:["Ísland · áætlað viðhald og truflanir í raforkukerfinu","Iceland · planned grid & plant outages"],
  src1:["Viðhaldsáætlun spegluð frá Orkugátt.","Outage schedule mirrored from the Orkugátt portal ·"],
@@ -379,7 +397,7 @@ const I18N={ /* [íslenska, English] */
  stationAffected1:["stöð fyrir áhrifum · áætlanir","station affected · estimates"],
  noGenSched:["Engar framleiðslutruflanir áætlaðar","No generation outages scheduled"],
  dayLow:["lágmark dags","day low"],peakWord:["hámark","peak"],atWord:["kl.","at"],yaxis:["y-ás","y-axis"],
- low12:["12 klst lágmark","12 h low"],high12:["hámark","high"],updatedWord:["uppfært","updated"],
+ low12:["12 klst. lágmark","12 h low"],high12:["12 klst. hámark","12 h high"],updatedWord:["uppfært","updated"],
  notif1:["tilkynning","notification"],notifN:["tilkynningar","notifications"],
  mwOffline:["MW úr rekstri","MW offline"],noGenOut:["engar framleiðslutruflanir","no generation outages"],
  totalFlow:["MW heildarflutningur","MW total flow"],
@@ -396,6 +414,9 @@ const I18N={ /* [íslenska, English] */
  stampFetched:["Gögn uppfærð","data fetched"],
  stampNoPublic:["Frí forskoðun: opinber gögn ekki enn tiltæk — skráðu þig inn fyrir rauntíma.","Free preview: public outage data not yet available — log in for live."],
  stampFallback:["Innbyggt afrit frá 6. júlí 2026 (data.json ekki tiltækt).","Built-in snapshot of 06 Jul 2026 (live data.json unavailable)."],
+ heroLiveLbl:["Heildarflutningur á rauntíma","Total flow, live"],
+ heroAtLbl:["Heildarflutningur","Total flow"],
+ refValueLbl:["Viðmiðunargildi","Reference value"],
  evH2:["Atburðir í kerfinu — sjálfvirk greining","Grid events — automatic analysis"],
  evSub:["Skyndilegar breytingar (≥29 MW á 5 mín) greindar sjálfkrafa út frá heildarflutningi og flutningssniðum kerfisins, tengdar tilkynningum stjórnstöðvar þegar þær birtast.","Sudden changes (≥29 MW in 5 min) detected automatically from total flow and the grid\u2019s transmission-corridor (snið) cuts, linked to control-room notifications when they appear."],
  evDrop:["Fall","Drop"],evRise:["Hækkun","Rise"],
@@ -616,9 +637,9 @@ function renderDay(){
  nextBtn.disabled=+slider.value>=+slider.max;
  document.getElementById("dateLbl").textContent=fmtDate(t0d,{weekday:"short",day:"2-digit",month:"short",year:"numeric"});
  const{sum,parts}=mwAt(t0d);
- document.getElementById("mwOut").textContent=sum.toLocaleString(LOC());
+ document.getElementById("mwOut").textContent=fmtNum(sum,0);
  document.getElementById("mwSub").textContent=parts.length?parts.length+" "+(parts.length>1?t("stationsAffected"):t("stationAffected1")):t("noGenSched");
- document.getElementById("bandPct").textContent=t("offlinePct")+": "+(100*sum/TOTAL_CAP).toFixed(1)+"% ("+t("estWord")+")";
+ document.getElementById("bandPct").textContent=t("offlinePct")+": "+fmtNum(100*sum/TOTAL_CAP,1)+"% ("+t("estWord")+")";
  band.innerHTML="";let x=0;
  parts.forEach(p=>{
   const w=100*p.v/TOTAL_CAP;
@@ -734,16 +755,20 @@ function renderDayChart(dayStart){
  svg+=`<line class="hgrid" x1="${L}" y1="${T+PH}" x2="${W-R}" y2="${T+PH}" style="stroke:var(--basalt);stroke-width:1.5"/>`;
  svg+=`</svg>`;
  document.getElementById("chartWrap").innerHTML=svg;
- document.getElementById("h48now").textContent=vmax.toLocaleString(LOC());
  const pk=hours.reduce((a,b)=>b.sum>a.sum?b:a,hours[0]);
- document.getElementById("h48peak").innerHTML=`${t("dayLow")} <b style="color:var(--basalt)">${vmin.toLocaleString(LOC())} MW</b> · ${t("peakWord")} <b>${vmax.toLocaleString(LOC())} MW</b> ${t("atWord")} ${String(pk.t.getHours()).padStart(2,"0")}:00<br>${t("yaxis")} ${ymin}–${ymax} MW · ${t("estWord")}`;
- const tip=document.getElementById("htip");
  const hh=n=>String(n).padStart(2,"0")+":00";
+ const heroVal=document.getElementById("h48HeroVal"),heroSub=document.getElementById("h48HeroSub");
+ document.getElementById("h48Ctx").innerHTML=
+  `<div>${t("dayLow")}: <b>${fmtNum(vmin,0)} MW</b></div>`+
+  `<div>${t("peakWord")}: <b>${fmtNum(vmax,0)} MW</b> ${t("atWord")} ${hh(pk.t.getHours())}</div>`+
+  `<div class="ctx-note">${t("yaxis")} ${fmtNum(ymin,0)}–${fmtNum(ymax,0)} MW · ${t("estWord")}</div>`;
  const showHour=i=>{
   const h=hours[i];
   const dot=document.getElementById("hdot");
   dot.style.display="";dot.setAttribute("cx",x(i));dot.setAttribute("cy",y(h.sum));
-  tip.innerHTML=`${hh(h.t.getHours())}–${hh((h.t.getHours()+1)%24)} → <b>${h.sum} ${t("mwOffline")}</b> <span class="stns">${h.parts.length?"· "+h.parts.map(p=>(NAMES[p.k]||p.k)+" −"+p.v).join(", "):"· "+t("noGenOut")}</span>`;
+  heroVal.textContent=fmtNum(h.sum,0)+" MW";
+  const range=(LANG==="is"?"kl. ":"")+hh(h.t.getHours())+"–"+hh((h.t.getHours()+1)%24);
+  heroSub.innerHTML=`${range} <span class="stns">· ${h.parts.length?h.parts.map(p=>(NAMES[p.k]||p.k)+" −"+p.v).join(", "):t("noGenOut")}</span>`;
  };
  showHour(hours.indexOf(pk));   // default: the day's peak hour
  document.getElementById("chartWrap").onmousemove=e=>{
@@ -816,25 +841,31 @@ async function loadLive(){
  const isDelayed=!!window.__loadDelayed;
  const ageMin=Math.round((Date.now()-cur.t)/6e4);
  const stale=!isDelayed&&ageMin>15;
- const nowEl=document.getElementById("liveNow");
- nowEl.textContent=cur.v.toLocaleString(LOC(),{maximumFractionDigits:1});
- nowEl.style.opacity=stale?".35":"1";
- document.getElementById("livePeak").innerHTML=
-  (isDelayed?`<span style="color:var(--magma);font-weight:600">${t("preview1")} ${Math.round(DELAY_H)} ${t("preview2")}</span><br>`:"")+
-  (stale?`<span style="color:var(--magma);font-weight:600">${t("staleWarn1")} ${ageMin>120?Math.round(ageMin/60)+" "+t("u_h"):ageMin+" "+t("u_min")} ${t("staleWarn2")}</span><br>`:"")+
-  `${t("low12")} <b style="color:var(--basalt)">${vmin.toFixed(0)} MW</b> · ${t("high12")} <b>${vmax.toFixed(0)} MW</b><br>${t("updatedWord")} ${fmtTime(new Date(cur.t))} · ${inWin.length} ${inWin.length===1?t("notif1"):t("notifN")}`;
- const tip=document.getElementById("ltip"),dot=document.getElementById("livedot");
+ const heroVal=document.getElementById("liveHeroVal"),heroSub=document.getElementById("liveHeroSub");
+ heroVal.style.opacity=stale?".35":"1";
+ let warn="";
+ if(isDelayed)warn+=`<div style="color:var(--magma);font-weight:600">${t("preview1")} ${Math.round(DELAY_H)} ${t("preview2")}</div>`;
+ if(stale)warn+=`<div style="color:var(--magma);font-weight:600">${t("staleWarn1")} ${ageMin>120?Math.round(ageMin/60)+" "+t("u_h"):ageMin+" "+t("u_min")} ${t("staleWarn2")}</div>`;
+ document.getElementById("liveCtx").innerHTML=warn+
+  `<div>${t("refValueLbl")}: <b>${fmtNum(cur.v,1)} MW</b></div>`+
+  `<div>${t("low12")}: <b>${fmtNum(vmin,0)} MW</b></div>`+
+  `<div>${t("high12")}: <b>${fmtNum(vmax,0)} MW</b></div>`+
+  `<div class="ctx-note">${t("updatedWord")} ${fmtTime(new Date(cur.t))} · ${inWin.length} ${inWin.length===1?t("notif1"):t("notifN")}</div>`;
+ const dot=document.getElementById("livedot");
  const hhmm=x=>fmtTime(new Date(x));
  const showPoint=p=>{
   dot.style.display="";dot.setAttribute("cx",x(p.t));dot.setAttribute("cy",y(p.v));
-  tip.innerHTML=`${hhmm(p.t)} → <b style="color:var(--hydro)">${p.v.toLocaleString(LOC(),{maximumFractionDigits:1})}</b> ${t("totalFlow")}`;
+  heroVal.textContent=fmtNum(p.v,1)+" MW";
+  const time=(LANG==="is"?"kl. ":"")+hhmm(p.t);
+  heroSub.textContent=(p.t===cur.t?t("heroLiveLbl"):t("heroAtLbl"))+" ("+time+")";
  };
  showPoint(pts[pts.length-1]);   // default: the newest reading
  document.getElementById("liveWrap").onmousemove=e=>{
   const nd=e.target.closest(".notifdot");
   if(nd){
    const n=inWin[+nd.dataset.n];
-   tip.innerHTML=`<b style="color:var(--magma)">◆ ${hhmm(n.t)}</b> ${n.short}${n.long?` <span class="stns">— ${n.long}</span>`:""}`;
+   heroVal.textContent="◆ "+hhmm(n.t);
+   heroSub.innerHTML=`${n.short}${n.long?` <span class="stns">— ${n.long}</span>`:""}`;
    return;
   }
   const r=e.target.closest(".hhit");if(!r)return;
