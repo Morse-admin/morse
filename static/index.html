@@ -37,7 +37,7 @@ header{padding:34px 0 22px;border-bottom:2px solid var(--basalt);position:relati
 .langsw button.on{border-color:var(--hydro);filter:none;opacity:1}
 .langsw button:hover{filter:none;opacity:1}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steam)}
-h1{font-family:var(--disp);font-weight:700;font-size:clamp(26px,4.4vw,40px);letter-spacing:.01em;line-height:1.05;margin-top:6px}
+h1{font-family:var(--disp);font-weight:700;font-size:clamp(14px,5.6vw,40px);letter-spacing:.01em;line-height:1.15;margin-top:6px;white-space:nowrap}
 h1 .thin{color:var(--hydro)}
 .src{margin-top:8px;font-size:13px;color:var(--steam)}
 .src a{color:var(--hydro)}
@@ -873,32 +873,64 @@ initAccess().then(loadNotifTable);
 setInterval(loadNotifTable,5*60*1000);
 
 
-/* ---------------- title: morse → text over 3 s ---------------------------- */
+/* ---------------- title: morse → text, calm & static (no reflow) ---------- */
 (function(){
  const parts=[document.getElementById("mt1"),document.getElementById("mt2")];
  const finals=parts.map(el=>el.textContent);
  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
- const total=finals.join("");
- const N=total.length, DUR=6000, TICK=60;
+
+ const DUR=6000;          // total decode time
+ const FLICKER_MS=170;    // how often an unsettled glyph changes — calm, not strobing
  const rnd=()=>Math.random()<.55?"·":"−";
- // start as morse of the same length
- parts.forEach((el,pi)=>{el.textContent=finals[pi].replace(/[^ ]/g,rnd)});
+ const ease=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;   // easeInOutCubic — gentle start & landing
+
+ // Split each part into one <span> per character, sized to that character's
+ // OWN final rendered width. Total line width is therefore identical from
+ // the very first frame, so nothing ever reflows or shifts sideways.
+ const chars=[];
+ parts.forEach((el,pi)=>{
+  el.style.display="inline-flex";
+  el.style.whiteSpace="nowrap";
+  const frag=document.createDocumentFragment();
+  for(const ch of finals[pi]){
+   const span=document.createElement("span");
+   span.textContent=ch;
+   span.style.display="inline-block";
+   if(ch!==" ")span.style.textAlign="center";
+   frag.appendChild(span);
+   if(ch!==" ")chars.push({span,ch});
+  }
+  el.textContent="";
+  el.appendChild(frag);
+ });
+ chars.forEach(o=>{ o.span.style.width=o.span.getBoundingClientRect().width+"px"; });
+
+ // Evenly staggered settle times, left→right, eased, with a small organic
+ // jitter — resolves calmly rather than all at once or all randomly.
+ const N=chars.length;
+ chars.forEach((o,i)=>{
+  const base=N>1?i/(N-1):1;
+  o.settleAt=ease(base)*DUR*0.86+Math.random()*DUR*0.05;
+  o.lastFlicker=-Infinity;
+  o.span.textContent=rnd();
+ });
+
  const t0=performance.now();
- const iv=setInterval(()=>{
-  const p=(performance.now()-t0)/DUR;   // 0→1
-  let idx=0,done=true;
-  parts.forEach((el,pi)=>{
-   let out="";
-   for(const ch of finals[pi]){
-    if(ch===" "){out+=" ";idx++;continue;}
-    if(idx/N<p)out+=ch;                  // resolved left→right
-    else{out+=rnd();done=false;}
-    idx++;
+ function frame(now){
+  const elapsed=now-t0;
+  let unsettled=false;
+  for(const o of chars){
+   if(elapsed>=o.settleAt){
+    if(o.span.textContent!==o.ch)o.span.textContent=o.ch;
+    continue;
    }
-   el.textContent=out;
-  });
-  if(done||p>=1){parts.forEach((el,pi)=>el.textContent=finals[pi]);clearInterval(iv);}
- },TICK);
+   unsettled=true;
+   if(now-o.lastFlicker>=FLICKER_MS){ o.span.textContent=rnd(); o.lastFlicker=now; }
+  }
+  if(unsettled||elapsed<DUR)requestAnimationFrame(frame);
+  else chars.forEach(o=>{o.span.textContent=o.ch;o.span.style.width="";});
+ }
+ requestAnimationFrame(frame);
 })();
 
 
