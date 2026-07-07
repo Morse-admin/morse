@@ -952,12 +952,17 @@ setInterval(loadNotifTable,5*60*1000);
  const h1=mt1.parentElement;
  h1.style.whiteSpace="normal";              // morse code is much longer — let it wrap
  mt1.style.fontFamily=mt2.style.fontFamily="var(--mono)";
+ mt1.style.fontSize=mt2.style.fontSize="0.42em";
+ mt1.style.fontWeight=mt2.style.fontWeight="500";
  mt1.textContent=morse1;
  mt2.textContent=morse2;
 
- setTimeout(()=>{ mt1.style.fontFamily=""; mt1.textContent=final1; }, 1400);
  setTimeout(()=>{
-  mt2.style.fontFamily="";
+  mt1.style.fontFamily=mt1.style.fontSize=mt1.style.fontWeight="";
+  mt1.textContent=final1;
+ }, 1400);
+ setTimeout(()=>{
+  mt2.style.fontFamily=mt2.style.fontSize=mt2.style.fontWeight="";
   mt2.textContent=final2;
   h1.style.whiteSpace="";                   // back to the single-line brand lockup
  }, 2600);
