@@ -5,59 +5,72 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Morse — Skýr skilaboð</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* Iceland re-tuned for a monitoring instrument: glacier paper + basalt ink,
-     with red earned only by an actual MW figure, and moss standing in for "all clear" */
-  --ice:#F3F6F9;          /* glacier-white page background, cool not warm */
-  --panel:#FFFFFF;        /* card surface, lifted off the page */
-  --basalt:#0C2340;       /* deep basalt ink */
-  --steam:#5C7186;        /* steam grey — secondary text */
-  --line:#DAE3EC;
-  --hydro:#0B63B4;        /* glacial blue accent */
-  --hydro-soft:#E4EEF8;
-  --magma:#C8102E;        /* ember red — reserved for a genuine MW figure > 0 */
-  --magma-soft:#FBE7E9;
-  --moss:#1B7A5A;         /* geothermal moss — all-clear / live-good state */
-  --moss-soft:#E1F0E9;
-  --mono:'IBM Plex Mono',monospace;      /* readouts, codes, timestamps */
-  --sans:'IBM Plex Sans',system-ui,sans-serif; /* UI chrome & running text */
-  --disp:'Source Serif 4',Georgia,serif; /* headline + the big MW figures only */
+  /* Icelandic flag: blue #02529C, red #DC1E35, white */
+  --ice:#FFFFFF;          /* white page background */
+  --panel:#FFFFFF;        /* flag-white boxes */
+  --basalt:#0A2A52;       /* dark blue text */
+  --steam:#46648A;        /* muted blue-grey text */
+  --line:#C3D5E8;
+  --hydro:#02529C;        /* flag blue */
+  --hydro-soft:#D8E7F5;
+  --magma:#DC1E35;        /* flag red */
+  --magma-soft:#FBE1E5;
+  --moss:#02529C;         /* status accents fold into flag blue */
+  --moss-soft:#D8E7F5;
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'Source Serif 4',Georgia,serif;
+  --disp:'Source Serif 4',Georgia,serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{background:var(--ice);color:var(--basalt);font-family:var(--sans);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body{background:var(--ice);color:var(--basalt);font-family:var(--sans);font-size:16px;line-height:1.5}
 .wrap{max-width:1060px;margin:0 auto;padding:0 20px 80px}
 
 /* ---------- header ---------- */
-header{padding:22px 0 26px;border-bottom:2px solid var(--basalt)}
-.statusbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px;padding-bottom:16px;margin-bottom:20px;border-bottom:1px solid var(--line)}
-.topbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header{padding:34px 0 22px;border-bottom:2px solid var(--basalt);position:relative}
+.topbar{position:absolute;top:28px;right:0;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:flex-end;max-width:78%}
 .langsw{display:flex;gap:6px}
-.langsw button{font-size:17px;line-height:1;padding:4px 7px;border:1.5px solid transparent;background:#fff;cursor:pointer;border-radius:3px;filter:grayscale(.65);opacity:.7}
+.langsw button{font-size:20px;line-height:1;padding:4px 7px;border:1.5px solid transparent;background:#fff;cursor:pointer;border-radius:3px;filter:grayscale(.65);opacity:.7}
 .langsw button.on{border-color:var(--hydro);filter:none;opacity:1}
 .langsw button:hover{filter:none;opacity:1}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steam)}
-h1{font-family:var(--disp);font-weight:700;font-size:clamp(28px,4.6vw,42px);letter-spacing:.005em;line-height:1.05;margin-top:10px}
+h1{font-family:var(--disp);font-weight:700;font-size:clamp(26px,4.4vw,40px);letter-spacing:.01em;line-height:1.05;margin-top:6px}
 h1 .thin{color:var(--hydro)}
-.src{margin-top:9px;font-size:13.5px;color:var(--steam);max-width:74ch}
+.src{margin-top:8px;font-size:13px;color:var(--steam)}
 .src a{color:var(--hydro)}
-.src b{color:var(--basalt);font-weight:600}
 
 /* ---------- access controls (in header) ---------- */
 .access{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.access .mode{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:2px}
+.access .mode{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px}
 .access .mode.free{background:var(--magma-soft);color:var(--magma);border:1px solid var(--magma)}
 .access .mode.livem{background:var(--moss-soft);color:var(--moss);border:1px solid var(--moss)}
 .access .msg{font-size:12.5px;color:var(--steam)}
-.access input{font-family:var(--mono);font-size:12px;padding:5px 8px;border:1px solid var(--line);border-radius:2px;width:130px}
-.access button{font-family:var(--mono);font-size:12px;font-weight:600;padding:6px 12px;border:1px solid var(--basalt);background:var(--basalt);color:#fff;cursor:pointer;border-radius:2px}
+.access input{font-family:var(--mono);font-size:12px;padding:5px 8px;border:1px solid var(--line);width:130px}
+.access button{font-family:var(--mono);font-size:12px;font-weight:600;padding:6px 12px;border:1px solid var(--basalt);background:var(--basalt);color:#fff;cursor:pointer}
 .access button:hover{background:var(--hydro);border-color:var(--hydro)}
 .access .err{color:var(--magma);font-family:var(--mono);font-size:12px}
 
+/* ---------- grid events (auto-narrated) ---------- */
+.events{margin-top:26px;background:var(--panel);border:2px solid var(--basalt);padding:22px}
+.events h2{font-family:var(--disp);font-size:20px;font-weight:700;margin-bottom:4px}
+.events .sub{font-size:13px;color:var(--steam);margin-bottom:14px}
+.evcard{border:1px solid var(--line);border-left:4px solid var(--magma);padding:14px 16px;margin-bottom:12px;background:#fff}
+.evcard.rise{border-left-color:var(--hydro)}
+.evcard .evhead{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between}
+.evcard .evtitle{font-family:var(--disp);font-weight:700;font-size:21px}
+.evcard.rise .evtitle b{color:var(--hydro)}
+.evcard .evtitle b{color:var(--magma)}
+.evcard .evtime{font-family:var(--mono);font-size:12px;color:var(--steam)}
+.evcard .evbody{font-size:14px;margin-top:6px;line-height:1.55}
+.evcard .evsnid{font-family:var(--mono);font-size:12.5px;margin-top:6px;color:var(--basalt)}
+.evcard .evnote{margin-top:8px;font-size:13px;padding:7px 10px;background:var(--magma-soft);border-left:3px solid var(--magma)}
+.evcard .evnote.pending{background:var(--hydro-soft);border-left-color:var(--hydro);color:var(--steam)}
+
 /* ---------- notifications table ---------- */
-.ntbl{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:4px;box-shadow:0 1px 2px rgba(12,35,64,.05);padding:22px}
+.ntbl{margin-top:26px;background:var(--panel);border:2px solid var(--basalt);padding:22px}
 .ntbl h2{font-family:var(--disp);font-size:20px;font-weight:700;margin-bottom:4px}
 .ntbl .sub{font-size:13px;color:var(--steam);margin-bottom:12px}
 .ntbl .scroll{max-height:340px;overflow-y:auto;border-top:1.5px solid var(--basalt)}
@@ -71,7 +84,7 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .ntbl .foot2{font-size:11.5px;color:var(--steam);margin-top:8px}
 
 /* ---------- live consumption panel ---------- */
-.live{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:4px;box-shadow:0 1px 2px rgba(12,35,64,.05);padding:22px 22px 18px}
+.live{margin-top:26px;background:var(--panel);border:2px solid var(--basalt);padding:22px 22px 18px}
 .live .big{font-family:var(--disp);font-weight:700;font-size:clamp(30px,5vw,44px);line-height:1;color:var(--hydro);font-variant-numeric:tabular-nums}
 .live .big small{font-size:.42em;font-weight:600;color:var(--basalt)}
 .lcons{fill:none;stroke:var(--hydro);stroke-width:2;stroke-linejoin:round}
@@ -83,14 +96,13 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .live .peak b{color:var(--hydro)}
 
 /* ---------- hourly day profile ---------- */
-.h48{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:4px;box-shadow:0 1px 2px rgba(12,35,64,.05);padding:22px 22px 18px}
+.h48{margin-top:26px;background:var(--panel);border:2px solid var(--basalt);padding:22px 22px 18px}
 .h48-head{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;justify-content:space-between}
 .belowchart{margin-top:12px}
 .h48 .big{font-family:var(--disp);font-weight:700;font-size:clamp(30px,5vw,44px);line-height:1;color:var(--magma);font-variant-numeric:tabular-nums}
 .h48 .big small{font-size:.42em;font-weight:600;color:var(--basalt)}
 .h48 .peak{font-family:var(--mono);font-size:12px;color:var(--steam);text-align:right}
 .h48 .peak b{color:var(--magma)}
-.h48.calm .big,.h48.calm .sidebig,.h48.calm .peak b{color:var(--moss)}
 .hoverbig{font-family:var(--disp);font-weight:700;font-size:clamp(24px,3.4vw,34px);line-height:1.25;color:var(--basalt);min-height:50px;margin-top:2px}
 .h48 .hoverbig b{color:var(--magma)}
 .hoverbig .stns{display:block;font-family:var(--mono);font-size:12.5px;font-weight:400;color:var(--steam);margin-top:3px}
@@ -102,10 +114,10 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .chart-wrap{margin-top:14px;position:relative}
 .chart-wrap svg{display:block;width:100%;height:auto}
 .hgrid{stroke:var(--line);stroke-width:1}
-.larea{fill:var(--acc,var(--magma));opacity:.10}
-.lpath{fill:none;stroke:var(--acc,var(--magma));stroke-width:2.5;stroke-linejoin:round}
+.larea{fill:var(--magma);opacity:.10}
+.lpath{fill:none;stroke:var(--magma);stroke-width:2.5;stroke-linejoin:round}
 .hhit{fill:transparent;cursor:crosshair}
-.hdot{fill:var(--acc,var(--magma));stroke:#fff;stroke-width:2;pointer-events:none}
+.hdot{fill:var(--magma);stroke:#fff;stroke-width:2;pointer-events:none}
 .axlbl{font-family:var(--mono);font-size:10px;fill:var(--steam)}
 .aylbl{font-family:var(--mono);font-size:10px;fill:var(--steam)}
 .daylbl{font-family:var(--mono);font-size:11px;font-weight:600;fill:var(--basalt);letter-spacing:.08em}
@@ -114,20 +126,19 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .htip .stns{color:var(--steam)}
 
 /* ---------- scrubber panel ---------- */
-.now{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:4px;box-shadow:0 1px 2px rgba(12,35,64,.05);padding:22px 22px 26px}
+.now{margin-top:26px;background:var(--panel);border:2px solid var(--basalt);padding:22px 22px 26px}
 .now-head{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between}
 .readout .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steam)}
-.readout .big{font-family:var(--disp);font-weight:700;font-size:clamp(40px,7vw,64px);line-height:1;color:var(--magma);font-variant-numeric:tabular-nums;transition:color .2s}
+.readout .big{font-family:var(--disp);font-weight:700;font-size:clamp(40px,7vw,64px);line-height:1;color:var(--magma);font-variant-numeric:tabular-nums}
 .readout .big small{font-size:.45em;font-weight:600;color:var(--basalt)}
 .readout .sub{font-size:13px;color:var(--steam);margin-top:2px}
-.now.calm .readout .big{color:var(--moss)}
 .scrub{flex:1;min-width:260px;max-width:460px}
 .scrub .date{font-family:var(--mono);font-weight:600;font-size:15px}
 .scrub input[type=range]{width:100%;margin-top:8px;accent-color:var(--magma);cursor:pointer}
 .scrub .ends{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--steam);margin-top:2px;padding:0 42px}
 .sliderline{display:flex;align-items:center;gap:8px;margin-top:8px}
 .sliderline input[type=range]{flex:1;margin:0;accent-color:var(--magma);cursor:pointer}
-.stepbtn{font-family:var(--mono);font-weight:600;font-size:12px;line-height:1;padding:0 10px;height:30px;white-space:nowrap;border:1px solid var(--line);border-radius:2px;background:#fff;color:var(--basalt);cursor:pointer;flex:none}
+.stepbtn{font-family:var(--mono);font-weight:600;font-size:12px;line-height:1;padding:0 10px;height:30px;white-space:nowrap;border:1px solid var(--line);background:#fff;color:var(--basalt);cursor:pointer;flex:none}
 .stepbtn:hover{border-color:var(--magma);color:var(--magma)}
 .stepbtn:active{background:var(--magma-soft)}
 .stepbtn:disabled{opacity:.35;cursor:default;border-color:var(--line);color:var(--steam)}
@@ -138,16 +149,14 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .band .seg{position:absolute;top:0;height:100%;background:var(--magma);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.35) 0 3px,transparent 3px 8px);transition:left .25s,width .25s}
 .band .seg:hover{filter:brightness(1.12)}
 .band-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.band-legend .chip{font-family:var(--mono);font-size:12px;padding:3px 8px;border:1px solid var(--line);border-radius:2px;background:#fff;transition:opacity .25s}
+.band-legend .chip{font-family:var(--mono);font-size:12px;padding:3px 8px;border:1px solid var(--line);background:#fff;transition:opacity .25s}
 .band-legend .chip b{color:var(--magma)}
 .band-legend .none{color:var(--steam);border-style:dashed}
 
 /* ---------- filters ---------- */
 .filters{display:flex;flex-wrap:wrap;gap:8px;margin:34px 0 14px;align-items:center}
 .filters .flbl{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--steam);margin-right:4px}
-.filters .flbl[style]{position:relative;padding-left:16px}
-.filters .flbl[style]::before{content:"";position:absolute;left:2px;top:2px;bottom:2px;width:1px;background:var(--line)}
-.fbtn{font-family:var(--mono);font-size:12.5px;padding:5px 11px;border:1px solid var(--line);border-radius:2px;background:#fff;color:var(--basalt);cursor:pointer;transition:border-color .15s}
+.fbtn{font-family:var(--mono);font-size:12.5px;padding:5px 11px;border:1px solid var(--line);background:#fff;color:var(--basalt);cursor:pointer}
 .fbtn:hover{border-color:var(--hydro)}
 .fbtn.on{background:var(--basalt);color:#fff;border-color:var(--basalt)}
 .count{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--steam)}
@@ -158,13 +167,13 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .row:hover{background:var(--hydro-soft)}
 .row.dim{opacity:.45}
 .kks{font-family:var(--mono)}
-.kks .code{display:inline-block;font-weight:600;font-size:14px;padding:2px 7px;border-radius:2px;background:var(--basalt);color:#fff}
+.kks .code{display:inline-block;font-weight:600;font-size:14px;padding:2px 7px;background:var(--basalt);color:#fff}
 .kks .nm{display:block;font-size:11px;color:var(--steam);margin-top:5px;line-height:1.3}
 .mid .t{font-weight:600;font-size:15px}
 .mid .when{font-family:var(--mono);font-size:12.5px;color:var(--steam);margin-top:3px}
 .mid .when b{color:var(--basalt);font-weight:500}
 .tags{margin-top:7px;display:flex;flex-wrap:wrap;gap:6px}
-.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:2px;border:1px solid var(--line);color:var(--steam);background:#fff}
+.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border:1px solid var(--line);color:var(--steam);background:#fff}
 .tag.live{border-color:var(--moss);color:var(--moss);background:var(--moss-soft)}
 .tag.done{border-color:var(--line);color:var(--steam);text-decoration:line-through}
 .mw{text-align:right}
@@ -175,11 +184,11 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .mw .est{font-family:var(--mono);font-size:10px;color:var(--magma);letter-spacing:.06em}
 .mw .cap{font-family:var(--mono);font-size:10.5px;color:var(--steam);margin-top:2px}
 
-.foot{margin-top:36px;padding-top:16px;border-top:2px solid var(--basalt);font-size:13px;line-height:1.6;color:var(--steam);max-width:760px}
+.foot{margin-top:36px;padding-top:14px;border-top:2px solid var(--basalt);font-size:12.5px;color:var(--steam);max-width:760px}
 .foot b{color:var(--basalt)}
 
 @media(max-width:840px){
-  .statusbar{justify-content:flex-start}
+  .topbar{position:static;margin-top:12px;justify-content:flex-start;max-width:100%}
 }
 @media(max-width:680px){
   .row{grid-template-columns:70px 1fr;grid-template-rows:auto auto}
@@ -193,22 +202,20 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 <div class="wrap">
 
 <header>
-  <div class="statusbar">
-    <div class="eyebrow" data-i18n="eyebrow"></div>
-    <div class="topbar">
-      <div class="access" id="accessBar" style="display:none">
-        <span class="mode" id="accessMode">…</span>
-        <span class="msg" id="accessMsg"></span>
-        <span id="loginBox" style="display:none">
-          <input type="password" id="pw" placeholder="aðgangsorð">
-          <button id="loginBtn">Opna rauntíma</button>
-          <span class="err" id="loginErr"></span>
-        </span>
-        <button id="logoutBtn" class="lgout" style="display:none">Útskrá</button>
-      </div>
-      <div class="langsw"><button id="langIS" title="Íslenska">🇮🇸</button><button id="langEN" title="English">🇬🇧</button></div>
+  <div class="topbar">
+    <div class="access" id="accessBar" style="display:none">
+      <span class="mode" id="accessMode">…</span>
+      <span class="msg" id="accessMsg"></span>
+      <span id="loginBox" style="display:none">
+        <input type="password" id="pw" placeholder="aðgangsorð">
+        <button id="loginBtn">Opna rauntíma</button>
+        <span class="err" id="loginErr"></span>
+      </span>
+      <button id="logoutBtn" class="lgout" style="display:none">Útskrá</button>
     </div>
+    <div class="langsw"><button id="langIS" title="Íslenska">🇮🇸</button><button id="langEN" title="English">🇬🇧</button></div>
   </div>
+  <div class="eyebrow" data-i18n="eyebrow"></div>
   <h1><span id="mt1">MORSE</span> <span class="thin" id="mt2">— SKÝR SKILABOÐ</span></h1>
   <div class="src"><span data-i18n="src1"></span> <b id="stamp">…</b> · <span data-i18n="src2"></span></div>
 </header>
@@ -220,6 +227,12 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
   </div>
   <div class="chart-wrap" id="liveWrap"></div>
   <div class="eyebrow belowchart"><span data-i18n="liveEye1"></span> <span style="color:var(--magma)">◆</span> <span data-i18n="liveEye2"></span></div>
+</section>
+
+<section class="events" id="eventsPanel" style="display:none">
+  <h2 data-i18n="evH2"></h2>
+  <div class="sub" data-i18n="evSub"></div>
+  <div id="evCards"></div>
 </section>
 
 <section class="ntbl" id="notifPanel" style="display:none">
@@ -351,6 +364,19 @@ const I18N={ /* [íslenska, English] */
  stampFetched:["gögn sótt","data fetched"],
  stampNoPublic:["frí forskoðun: opinber gögn ekki enn tiltæk — skráðu þig inn fyrir rauntíma","free preview: public outage data not yet available — log in for live"],
  stampFallback:["innbyggt afrit frá 6. júl 2026 (data.json ekki tiltækt)","built-in snapshot of 06 Jul 2026 (live data.json unavailable)"],
+ evH2:["Atburðir í kerfinu — sjálfvirk greining","Grid events — automatic analysis"],
+ evSub:["Skyndilegar breytingar (≥29 MW á 5 mín) greindar sjálfkrafa út frá heildarflutningi og sniðum, tengdar tilkynningum stjórnstöðvar þegar þær birtast.","Sudden changes (≥29 MW in 5 min) detected automatically from total flow and snið cuts, linked to control-room notifications when they appear."],
+ evDrop:["Fall","Drop"],evRise:["Hækkun","Rise"],
+ evOver:["á","over"],evMin:["mín","min"],
+ evMovers:["Mest hreyfing","Largest movers"],
+ evLockstep:["hreyfðust samstíga — bendir til einnar stórrar flutningsleiðar","moved in lockstep — points to a single large transfer path"],
+ evReversal:["snerist við","reversed direction"],
+ evMagSmelter:["Stærðargráða: stóriðja eða stór virkjunareining","Magnitude: smelter-class load or a major generating unit"],
+ evMagUnit:["Stærðargráða: stór eining eða álagsþrep","Magnitude: a large unit or load step"],
+ evRecovered:["Kerfið jafnaði sig á","System recovered in"],
+ evNotifMatch:["Tilkynning stjórnstöðvar","Control-room notification"],
+ evNotifLag:["birt","published"],evLater:["síðar","later"],
+ evNoNotif:["Engin tilkynning frá Landsneti enn um þennan atburð","No Landsnet notification about this event yet"],
  foot:["<b>Hvernig MW-tölurnar verða til.</b> Orkugátt birtir engar afltölur — aðeins hvaða eining eða lína er úti og hvenær. Hver færsla hér er borin saman við <b>uppgefið uppsett afl</b> viðkomandi vélar (t.d. Sultartangi 2 × 60 MW, Sigalda 3 × 50 MW, Krafla 2 × 30 MW, Hellisheiði HÞ-vélar 45 MW, Nesjavellir 4 × 30 MW). Færslur merktar <span class=\"est\">ÁÆTLAÐ</span> eru vélar með óvisst einingarafl. Vinna í flutningskerfi og við spenna er merkt sérstaklega því hún tekur enga framleiðslu úr rekstri, og mánaðarlegar prufukeyrslur varaafls eru prófanir, ekki straumleysi. Dagssamtölur telja skörun innan sömu stöðvar aðeins einu sinni (tæmt lón nær yfir skoðanir vélanna). Tölurnar eru áætlanir, ekki mælingar.",
   "<b>How the MW labels are made.</b> Orkugátt itself publishes no power figures — only which unit or line is out and when. Each entry here is matched against the <b>publicly listed installed capacity</b> of the affected generating unit (e.g. Sultartangi 2 × 60 MW, Sigalda 3 × 50 MW, Krafla 2 × 30 MW, Hellisheiði HP units 45 MW, Nesjavellir 4 × 30 MW). Entries marked <span class=\"est\">EST</span> are units whose individual rating is uncertain. Transmission-line and transformer work is labelled separately because it removes no generation, and monthly backup-generator runs are tests, not outages. The daily total de-duplicates overlapping work at the same station (a drained reservoir already covers its units' inspections). Values are planning estimates, not measurements."]
 };
@@ -367,7 +393,7 @@ function applyLang(){
 }
 function setLang(l){
  LANG=l;try{localStorage.setItem("morse_lang",l)}catch(e){}
- applyLang();renderAccessTexts();renderList();loadNotifTable();loadLive();
+ applyLang();renderAccessTexts();renderList();loadNotifTable();loadLive();loadEvents();
 }
 document.getElementById("langIS").onclick=()=>setLang("is");
 document.getElementById("langEN").onclick=()=>setLang("en");
@@ -559,7 +585,6 @@ function renderDay(){
  const{sum,parts}=mwAt(t0d);
  document.getElementById("mwOut").textContent=sum.toLocaleString(LOC());
  document.getElementById("mwSub").textContent=parts.length?parts.length+" "+(parts.length>1?t("stationsAffected"):t("stationAffected1")):t("noGenSched");
- document.querySelector(".now").classList.toggle("calm",sum===0);
  document.getElementById("bandPct").textContent=t("offlinePct")+": "+(100*sum/TOTAL_CAP).toFixed(1)+"% ("+t("estWord")+")";
  band.innerHTML="";let x=0;
  parts.forEach(p=>{
@@ -676,8 +701,6 @@ function renderDayChart(dayStart){
  svg+=`<line class="hgrid" x1="${L}" y1="${T+PH}" x2="${W-R}" y2="${T+PH}" style="stroke:var(--basalt);stroke-width:1.5"/>`;
  svg+=`</svg>`;
  document.getElementById("chartWrap").innerHTML=svg;
- document.getElementById("chartWrap").style.setProperty("--acc",vmax===0?"var(--moss)":"var(--magma)");
- document.querySelector(".h48").classList.toggle("calm",vmax===0);
  document.getElementById("h48now").textContent=vmax.toLocaleString(LOC());
  const pk=hours.reduce((a,b)=>b.sum>a.sum?b:a,hours[0]);
  document.getElementById("h48peak").innerHTML=`${t("dayLow")} <b style="color:var(--basalt)">${vmin.toLocaleString(LOC())} MW</b> · ${t("peakWord")} <b>${vmax.toLocaleString(LOC())} MW</b> ${t("atWord")} ${String(pk.t.getHours()).padStart(2,"0")}:00<br>${t("yaxis")} ${ymin}–${ymax} MW · ${t("estWord")}`;
@@ -850,48 +873,110 @@ initAccess().then(loadNotifTable);
 setInterval(loadNotifTable,5*60*1000);
 
 
-/* ---------------- title: morse → text, one letter at a time ---------------- */
+/* ---------------- title: morse → text over 3 s ---------------------------- */
 (function(){
  const parts=[document.getElementById("mt1"),document.getElementById("mt2")];
  const finals=parts.map(el=>el.textContent);
  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+ const total=finals.join("");
+ const N=total.length, DUR=6000, TICK=60;
  const rnd=()=>Math.random()<.55?"·":"−";
-
- // build one <span> per character. Each is measured at its FINAL width first,
- // then locked to that width before the morse glyph goes in — so the line's
- // total length never changes as letters resolve, nothing downstream shifts.
- const order=[];
- parts.forEach((el,pi)=>{
-  el.innerHTML="";
-  for(const ch of finals[pi]){
-   const span=document.createElement("span");
-   if(ch===" "){span.textContent=" ";el.appendChild(span);continue;}
-   span.style.display="inline-block";
-   span.style.textAlign="center";
-   span.style.transition="opacity .3s ease";
-   span.textContent=ch;               // render the final letter once, to measure it
-   el.appendChild(span);
-   span.style.width=span.getBoundingClientRect().width+"px"; // lock the slot
-   span.dataset.final=ch;
-   span.textContent=rnd();            // now swap in its fixed morse glyph
-   order.push(span);
-  }
- });
-
- // reveal left→right, one letter per step, unhurried and even
- const STEP=180, START_DELAY=400;
- let i=0;
- function revealNext(){
-  if(i>=order.length)return;
-  const span=order[i++];
-  span.style.opacity="0";
-  setTimeout(()=>{span.textContent=span.dataset.final;span.style.opacity="1"},150);
-  setTimeout(revealNext,STEP);
- }
- setTimeout(revealNext,START_DELAY);
+ // start as morse of the same length
+ parts.forEach((el,pi)=>{el.textContent=finals[pi].replace(/[^ ]/g,rnd)});
+ const t0=performance.now();
+ const iv=setInterval(()=>{
+  const p=(performance.now()-t0)/DUR;   // 0→1
+  let idx=0,done=true;
+  parts.forEach((el,pi)=>{
+   let out="";
+   for(const ch of finals[pi]){
+    if(ch===" "){out+=" ";idx++;continue;}
+    if(idx/N<p)out+=ch;                  // resolved left→right
+    else{out+=rnd();done=false;}
+    idx++;
+   }
+   el.textContent=out;
+  });
+  if(done||p>=1){parts.forEach((el,pi)=>el.textContent=finals[pi]);clearInterval(iv);}
+ },TICK);
 })();
 
 
+/* ---------------- grid events: cluster shifts + narrate -------------------- */
+async function loadEvents(){
+ let shifts=[],notifs=[];
+ try{
+  const r=await fetch("api/shifts?days=7",{cache:"no-store"});
+  if(!r.ok)return;
+  shifts=(await r.json()).shifts||[];
+ }catch(e){return}
+ try{
+  const rn=await fetch("api/notifications?days=8",{cache:"no-store"});
+  if(rn.ok)notifs=(await rn.json()).notifications||[];
+ }catch(e){}
+ if(!shifts.length){document.getElementById("eventsPanel").style.display="none";return}
+ document.getElementById("eventsPanel").style.display="";
+ shifts.sort((a,b)=>a.ts.localeCompare(b.ts));
+ // cluster: gap ≤ 30 min
+ const clusters=[];let cur=null;
+ shifts.forEach(s=>{
+  const tms=new Date(s.ts).getTime();
+  if(cur&&tms-cur.end<=30*6e4){cur.items.push(s);cur.end=tms;}
+  else{cur={start:tms,end:tms,items:[s]};clusters.push(cur);}
+ });
+ const hhmm=x=>new Date(x).toLocaleTimeString(LOC(),{hour:"2-digit",minute:"2-digit",hour12:false});
+ const dmy=x=>new Date(x).toLocaleDateString(LOC(),{day:"2-digit",month:"short"});
+ const fmtLag=m=>m<60?m+" "+t("u_min"):m<48*60?(m/60).toFixed(1)+" "+t("u_h"):Math.round(m/1440)+" d";
+ const html=clusters.slice().reverse().map(c=>{
+  const first=c.items[0],last=c.items[c.items.length-1];
+  const startMW=first.from_mw,extreme=c.items.reduce((a,s)=>Math.abs(s.to_mw-startMW)>Math.abs(a-startMW)?s.to_mw:a,first.to_mw);
+  const net=Math.round(extreme-startMW);
+  const isDrop=net<0;
+  const durMin=Math.round((c.end-c.start)/6e4)+first.window_min;
+  // snið analysis from the first shift with before/after data
+  const withSnid=c.items.find(s=>s.snid_from&&s.snid_to&&Object.keys(s.snid_from).length);
+  let moversLine="",lockstep=false,reversals=[];
+  if(withSnid){
+   const keys=[...new Set([...Object.keys(withSnid.snid_from),...Object.keys(withSnid.snid_to)])];
+   const moves=keys.map(k=>({k,from:+withSnid.snid_from[k]||0,to:+withSnid.snid_to[k]||0}))
+     .map(m=>({...m,d:Math.round((m.to-m.from)*10)/10}))
+     .filter(m=>Math.abs(m.d)>=10).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d));
+   if(moves.length){
+    const top=moves.slice(0,3);
+    moversLine=top.map(m=>`${m.k} ${m.d>0?"+":""}${Math.round(m.d)}`).join(" · ");
+    lockstep=moves.length>=2&&Math.sign(moves[0].d)===Math.sign(moves[1].d)&&Math.abs(moves[1].d)>=Math.abs(moves[0].d)*0.6;
+    reversals=moves.filter(m=>m.from*m.to<0&&Math.abs(m.from)>=15&&Math.abs(m.to)>=5)
+      .map(m=>`${m.k} (${Math.round(m.from)} → ${Math.round(m.to)})`);
+   }
+  }
+  // recovery: did it return within 15% of start?
+  const recovered=Math.abs(last.to_mw-startMW)<Math.abs(net)*0.15&&c.items.length>1;
+  // notification match: occurred within event window ±30 min
+  const match=notifs.find(n=>{const nt=new Date(n.ts).getTime();return nt>=c.start-45*6e4&&nt<=c.end+45*6e4;});
+  const fresh=(Date.now()-c.end)<24*36e5;
+  let noteHtml="";
+  if(match)noteHtml=`<div class="evnote"><b>${t("evNotifMatch")}:</b> “${match.short}” · ${t("evNotifLag")} ${fmtLag(match.publish_lag_min)} ${t("evLater")}</div>`;
+  else if(fresh)noteHtml=`<div class="evnote pending">${t("evNoNotif")}</div>`;
+  const mag=Math.abs(net)>=250?t("evMagSmelter"):Math.abs(net)>=100?t("evMagUnit"):"";
+  return `<div class="evcard${isDrop?"":" rise"}">
+   <div class="evhead">
+     <span class="evtitle">${isDrop?t("evDrop"):t("evRise")} <b>${net>0?"+":""}${net} MW</b> ${t("evOver")} ${durMin} ${t("evMin")}</span>
+     <span class="evtime">${dmy(c.start)} ${hhmm(c.start)}–${hhmm(c.end)} · ${Math.round(startMW)} → ${Math.round(extreme)} MW</span>
+   </div>
+   <div class="evbody">
+     ${moversLine?`<span class="evsnid"><b>${t("evMovers")}:</b> ${moversLine}</span><br>`:""}
+     ${lockstep?t("evLockstep")+". ":""}
+     ${reversals.length?t("evReversal")+": "+reversals.join(", ")+". ":""}
+     ${mag?mag+". ":""}
+     ${recovered?t("evRecovered")+" "+durMin+" "+t("evMin")+".":""}
+   </div>
+   ${noteHtml}
+  </div>`;
+ }).join("");
+ document.getElementById("evCards").innerHTML=html;
+}
+loadEvents();
+setInterval(loadEvents,5*60*1000);
 
 </script>
 </body>
