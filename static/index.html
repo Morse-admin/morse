@@ -5,24 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Morse — Skýr skilaboð</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   /* Icelandic flag: blue #02529C, red #DC1E35, white */
   --ice:#FFFFFF;          /* white page background */
   --panel:#FFFFFF;        /* flag-white boxes */
   --basalt:#0A2A52;       /* dark blue text */
-  --steam:#46648A;        /* muted blue-grey text */
-  --line:#C3D5E8;
+  --steam:#5B7290;        /* muted blue-grey text */
+  --line:#E2E8F0;         /* soft neutral border */
+  --line-soft:#EEF2F7;    /* even softer, for chart grids */
+  --chip-bg:#EEF2F7;      /* unselected chip background */
   --hydro:#02529C;        /* flag blue */
-  --hydro-soft:#D8E7F5;
+  --hydro-soft:#EAF1FA;   /* softened blue tint for callouts */
   --magma:#DC1E35;        /* flag red */
-  --magma-soft:#FBE1E5;
+  --magma-soft:#FCE9EC;   /* softened red tint for callouts */
   --moss:#02529C;         /* status accents fold into flag blue */
-  --moss-soft:#D8E7F5;
+  --moss-soft:#EAF1FA;
+  --shadow:0 4px 6px -1px rgba(10,42,82,.06),0 2px 4px -2px rgba(10,42,82,.04);
+  --radius:14px;
   --mono:'IBM Plex Mono',monospace;
-  --sans:'Source Serif 4',Georgia,serif;
-  --disp:'Source Serif 4',Georgia,serif;
+  --brand:'Source Serif 4',Georgia,serif;   /* logo wordmark only */
+  --sans:'Inter',system-ui,-apple-system,sans-serif;
+  --disp:'Inter',system-ui,-apple-system,sans-serif;  /* big glanceable numbers */
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -37,7 +42,7 @@ header{padding:34px 0 22px;border-bottom:2px solid var(--basalt);position:relati
 .langsw button.on{border-color:var(--hydro);filter:none;opacity:1}
 .langsw button:hover{filter:none;opacity:1}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steam)}
-h1{font-family:var(--disp);font-weight:700;font-size:clamp(14px,5.6vw,40px);letter-spacing:.01em;line-height:1.15;margin-top:6px;white-space:nowrap}
+h1{font-family:var(--brand);font-weight:700;font-size:clamp(14px,5.6vw,40px);letter-spacing:.01em;line-height:1.15;margin-top:6px;white-space:nowrap}
 h1 .thin{color:var(--hydro)}
 .src{margin-top:8px;font-size:13px;color:var(--steam)}
 .src a{color:var(--hydro)}
@@ -48,16 +53,16 @@ h1 .thin{color:var(--hydro)}
 .access .mode.free{background:var(--magma-soft);color:var(--magma);border:1px solid var(--magma)}
 .access .mode.livem{background:var(--moss-soft);color:var(--moss);border:1px solid var(--moss)}
 .access .msg{font-size:12.5px;color:var(--steam)}
-.access input{font-family:var(--mono);font-size:12px;padding:5px 8px;border:1px solid var(--line);width:130px}
-.access button{font-family:var(--mono);font-size:12px;font-weight:600;padding:6px 12px;border:1px solid var(--basalt);background:var(--basalt);color:#fff;cursor:pointer}
+.access input{font-family:var(--mono);font-size:12px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;width:130px}
+.access button{font-family:var(--mono);font-size:12px;font-weight:600;padding:6px 14px;border:1px solid var(--basalt);border-radius:8px;background:var(--basalt);color:#fff;cursor:pointer}
 .access button:hover{background:var(--hydro);border-color:var(--hydro)}
 .access .err{color:var(--magma);font-family:var(--mono);font-size:12px}
 
 /* ---------- grid events (auto-narrated) ---------- */
-.events{margin-top:26px;background:var(--panel);border:2px solid var(--basalt);padding:22px}
+.events{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}
 .events h2{font-family:var(--disp);font-size:20px;font-weight:700;margin-bottom:4px}
 .events .sub{font-size:13px;color:var(--steam);margin-bottom:14px}
-.evcard{border:1px solid var(--line);border-left:4px solid var(--magma);padding:14px 16px;margin-bottom:12px;background:#fff}
+.evcard{border:1px solid var(--line);border-left:4px solid var(--magma);border-radius:8px;padding:14px 16px;margin-bottom:12px;background:#fff}
 .evcard.rise{border-left-color:var(--hydro)}
 .evcard .evhead{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between}
 .evcard .evtitle{font-family:var(--disp);font-weight:700;font-size:21px}
@@ -66,11 +71,11 @@ h1 .thin{color:var(--hydro)}
 .evcard .evtime{font-family:var(--mono);font-size:12px;color:var(--steam)}
 .evcard .evbody{font-size:14px;margin-top:6px;line-height:1.55}
 .evcard .evsnid{font-family:var(--mono);font-size:12.5px;margin-top:6px;color:var(--basalt)}
-.evcard .evnote{margin-top:8px;font-size:13px;padding:7px 10px;background:var(--magma-soft);border-left:3px solid var(--magma)}
-.evcard .evnote.pending{background:var(--hydro-soft);border-left-color:var(--hydro);color:var(--steam)}
+.evcard .evnote{margin-top:10px;font-size:13px;padding:12px 16px;border-radius:8px;background:var(--magma-soft);border-left:3px solid var(--magma)}
+.evcard .evnote.pending{background:#F4F7FA;border-left-color:var(--line);color:var(--steam)}
 
 /* ---------- notifications table ---------- */
-.ntbl{margin-top:26px;background:var(--panel);border:2px solid var(--basalt);padding:22px}
+.ntbl{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}
 .ntbl h2{font-family:var(--disp);font-size:20px;font-weight:700;margin-bottom:4px}
 .ntbl .sub{font-size:13px;color:var(--steam);margin-bottom:12px}
 .ntbl .scroll{max-height:340px;overflow-y:auto;border-top:1.5px solid var(--basalt)}
@@ -84,10 +89,10 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .ntbl .foot2{font-size:11.5px;color:var(--steam);margin-top:8px}
 
 /* ---------- live consumption panel ---------- */
-.live{margin-top:26px;background:var(--panel);border:2px solid var(--basalt);padding:22px 22px 18px}
+.live{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 22px 18px}
 .live .big{font-family:var(--disp);font-weight:700;font-size:clamp(30px,5vw,44px);line-height:1;color:var(--hydro);font-variant-numeric:tabular-nums}
 .live .big small{font-size:.42em;font-weight:600;color:var(--basalt)}
-.lcons{fill:none;stroke:var(--hydro);stroke-width:2;stroke-linejoin:round}
+.lcons{fill:none;stroke:var(--hydro);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
 .lconsarea{fill:var(--hydro);opacity:.08}
 .notifline{stroke:var(--magma);stroke-width:1.5;stroke-dasharray:3 3}
 .notifdot{fill:var(--magma);stroke:#fff;stroke-width:1.5;cursor:pointer}
@@ -96,26 +101,26 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .live .peak b{color:var(--hydro)}
 
 /* ---------- hourly day profile ---------- */
-.h48{margin-top:26px;background:var(--panel);border:2px solid var(--basalt);padding:22px 22px 18px}
+.h48{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 22px 18px}
 .h48-head{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;justify-content:space-between}
 .belowchart{margin-top:12px}
 .h48 .big{font-family:var(--disp);font-weight:700;font-size:clamp(30px,5vw,44px);line-height:1;color:var(--magma);font-variant-numeric:tabular-nums}
 .h48 .big small{font-size:.42em;font-weight:600;color:var(--basalt)}
 .h48 .peak{font-family:var(--mono);font-size:12px;color:var(--steam);text-align:right}
 .h48 .peak b{color:var(--magma)}
-.hoverbig{font-family:var(--disp);font-weight:700;font-size:clamp(24px,3.4vw,34px);line-height:1.25;color:var(--basalt);min-height:50px;margin-top:2px}
+.hoverbig{font-family:var(--disp);font-weight:800;font-size:clamp(24px,3.4vw,34px);line-height:1.25;color:var(--basalt);min-height:50px;margin-top:2px;font-variant-numeric:tabular-nums}
 .h48 .hoverbig b{color:var(--magma)}
 .hoverbig .stns{display:block;font-family:var(--mono);font-size:12.5px;font-weight:400;color:var(--steam);margin-top:3px}
-.sidebig{font-family:var(--disp);font-weight:700;font-size:clamp(24px,3.4vw,34px);line-height:1.1;font-variant-numeric:tabular-nums}
+.sidebig{font-family:var(--disp);font-weight:800;font-size:clamp(24px,3.4vw,34px);line-height:1.1;font-variant-numeric:tabular-nums}
 .sidebig small{font-size:.5em;font-weight:600;color:var(--basalt)}
 .live .sidebig{color:var(--hydro)}
 .h48 .sidebig{color:var(--magma)}
 .peak .sidebig{display:block;margin-bottom:4px}
 .chart-wrap{margin-top:14px;position:relative}
 .chart-wrap svg{display:block;width:100%;height:auto}
-.hgrid{stroke:var(--line);stroke-width:1}
+.hgrid{stroke:var(--line-soft);stroke-width:1}
 .larea{fill:var(--magma);opacity:.10}
-.lpath{fill:none;stroke:var(--magma);stroke-width:2.5;stroke-linejoin:round}
+.lpath{fill:none;stroke:var(--magma);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
 .hhit{fill:transparent;cursor:crosshair}
 .hdot{fill:var(--magma);stroke:#fff;stroke-width:2;pointer-events:none}
 .axlbl{font-family:var(--mono);font-size:10px;fill:var(--steam)}
@@ -126,7 +131,7 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .htip .stns{color:var(--steam)}
 
 /* ---------- scrubber panel ---------- */
-.now{margin-top:26px;background:var(--panel);border:2px solid var(--basalt);padding:22px 22px 26px}
+.now{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 22px 26px}
 .now-head{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between}
 .readout .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steam)}
 .readout .big{font-family:var(--disp);font-weight:700;font-size:clamp(40px,7vw,64px);line-height:1;color:var(--magma);font-variant-numeric:tabular-nums}
@@ -138,27 +143,28 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .scrub .ends{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--steam);margin-top:2px;padding:0 42px}
 .sliderline{display:flex;align-items:center;gap:8px;margin-top:8px}
 .sliderline input[type=range]{flex:1;margin:0;accent-color:var(--magma);cursor:pointer}
-.stepbtn{font-family:var(--mono);font-weight:600;font-size:12px;line-height:1;padding:0 10px;height:30px;white-space:nowrap;border:1px solid var(--line);background:#fff;color:var(--basalt);cursor:pointer;flex:none}
+.stepbtn{font-family:var(--mono);font-weight:600;font-size:12px;line-height:1;padding:0 10px;height:32px;white-space:nowrap;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--basalt);cursor:pointer;flex:none}
 .stepbtn:hover{border-color:var(--magma);color:var(--magma)}
 .stepbtn:active{background:var(--magma-soft)}
 .stepbtn:disabled{opacity:.35;cursor:default;border-color:var(--line);color:var(--steam)}
 
 /* capacity band — the signature */
 .band-lbl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--steam);margin:24px 0 6px}
-.band{position:relative;height:46px;background:var(--hydro);background-image:linear-gradient(90deg,rgba(255,255,255,.14) 1px,transparent 1px);background-size:calc(100%/30) 100%;overflow:hidden}
-.band .seg{position:absolute;top:0;height:100%;background:var(--magma);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.35) 0 3px,transparent 3px 8px);transition:left .25s,width .25s}
-.band .seg:hover{filter:brightness(1.12)}
+.band{position:relative;height:46px;background:var(--hydro);border-radius:8px;overflow:hidden}
+.band .seg{position:absolute;top:0;height:100%;background:var(--magma);transition:left .25s,width .25s}
+.band .seg:hover{filter:brightness(1.1)}
 .band-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.band-legend .chip{font-family:var(--mono);font-size:12px;padding:3px 8px;border:1px solid var(--line);background:#fff;transition:opacity .25s}
+.band-legend .chip{font-family:var(--mono);font-size:12px;padding:4px 10px;border-radius:9999px;background:var(--chip-bg);transition:opacity .25s}
 .band-legend .chip b{color:var(--magma)}
 .band-legend .none{color:var(--steam);border-style:dashed}
 
 /* ---------- filters ---------- */
 .filters{display:flex;flex-wrap:wrap;gap:8px;margin:34px 0 14px;align-items:center}
 .filters .flbl{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--steam);margin-right:4px}
-.fbtn{font-family:var(--mono);font-size:12.5px;padding:5px 11px;border:1px solid var(--line);background:#fff;color:var(--basalt);cursor:pointer}
-.fbtn:hover{border-color:var(--hydro)}
-.fbtn.on{background:var(--basalt);color:#fff;border-color:var(--basalt)}
+.fbtn{font-family:var(--sans);font-weight:600;font-size:12.5px;padding:7px 15px;border:none;border-radius:9999px;background:var(--chip-bg);color:var(--basalt);cursor:pointer;transition:background .15s,color .15s}
+.fbtn:hover{background:var(--hydro-soft)}
+.fbtn.on{background:var(--basalt);color:#fff}
+.fbtn.on:hover{background:var(--basalt)}
 .count{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--steam)}
 
 /* ---------- outage list ---------- */
@@ -173,11 +179,11 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .mid .when{font-family:var(--mono);font-size:12.5px;color:var(--steam);margin-top:3px}
 .mid .when b{color:var(--basalt);font-weight:500}
 .tags{margin-top:7px;display:flex;flex-wrap:wrap;gap:6px}
-.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border:1px solid var(--line);color:var(--steam);background:#fff}
+.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:6px;color:var(--steam);background:var(--chip-bg)}
 .tag.live{border-color:var(--moss);color:var(--moss);background:var(--moss-soft)}
 .tag.done{border-color:var(--line);color:var(--steam);text-decoration:line-through}
 .mw{text-align:right}
-.mw .val{font-family:var(--disp);font-weight:700;font-size:24px;line-height:1;font-variant-numeric:tabular-nums}
+.mw .val{font-family:var(--disp);font-weight:800;font-size:24px;line-height:1;font-variant-numeric:tabular-nums}
 .mw .val.out{color:var(--magma)}
 .mw .val.zero{color:var(--steam);font-size:15px;font-weight:600}
 .mw .why{display:block;font-size:11.5px;color:var(--steam);margin-top:4px;line-height:1.35}
@@ -217,7 +223,7 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
   </div>
   <div class="eyebrow" data-i18n="eyebrow"></div>
   <h1><span id="mt1">MORSE</span> <span class="thin" id="mt2">— SKÝR SKILABOÐ</span></h1>
-  <div class="src"><span data-i18n="src1"></span> <b id="stamp">…</b> · <span data-i18n="src2"></span></div>
+  <div class="src"><span data-i18n="src1"></span> <b id="stamp">…</b> <span data-i18n="src2"></span></div>
 </header>
 
 <section class="live" id="livePanel" style="display:none">
@@ -301,9 +307,35 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 /* ---------------- i18n: Icelandic default, English via flag ---------------- */
 let LANG=(function(){try{return localStorage.getItem("morse_lang")||"is"}catch(e){return "is"}})();
 const LOC=()=>LANG==="is"?"is-IS":"en-GB";
+const IS_MONTHS=["janúar","febrúar","mars","apríl","maí","júní","júlí","ágúst","september","október","nóvember","desember"];
+const IS_MONTHS_SHORT=["jan.","feb.","mar.","apr.","maí","jún.","júl.","ágú.","sep.","okt.","nóv.","des."];
+const IS_WEEKDAYS=["sunnudagur","mánudagur","þriðjudagur","miðvikudagur","fimmtudagur","föstudagur","laugardagur"];
+const IS_WEEKDAYS_SHORT=["sun.","mán.","þri.","mið.","fim.","fös.","lau."];
+const hh2=n=>String(n).padStart(2,"0");
+/* Manual Icelandic formatter — browsers here have proven unreliable at
+   rendering is-IS month names (they fall back to English "Jul" etc.),
+   so Icelandic dates are always built by hand instead of trusting
+   toLocaleDateString/toLocaleString for month/weekday names. */
+function fmtDate(d,opts={}){
+ if(LANG!=="is"){
+  if(opts.hour){const o={...opts,hour:"2-digit",minute:"2-digit",hour12:false};return d.toLocaleString(LOC(),o);}
+  return d.toLocaleDateString(LOC(),opts);
+ }
+ const parts=[];
+ if(opts.weekday==="long")parts.push(IS_WEEKDAYS[d.getDay()]+",");
+ else if(opts.weekday==="short")parts.push(IS_WEEKDAYS_SHORT[d.getDay()]);
+ const day=opts.day==="2-digit"?hh2(d.getDate()):d.getDate();
+ const month=opts.month==="long"?IS_MONTHS[d.getMonth()]:IS_MONTHS_SHORT[d.getMonth()];
+ parts.push(`${day}.`,month);
+ if(opts.year)parts.push(String(d.getFullYear()));
+ let s=parts.join(" ");
+ if(opts.hour)s+=(opts.year?",":"")+" kl. "+hh2(d.getHours())+":"+hh2(d.getMinutes());
+ return s;
+}
+function fmtTime(d){return LANG==="is"?hh2(d.getHours())+":"+hh2(d.getMinutes()):d.toLocaleTimeString(LOC(),{hour:"2-digit",minute:"2-digit",hour12:false});}
 const I18N={ /* [íslenska, English] */
  eyebrow:["Ísland · áætlað viðhald og truflanir í raforkukerfinu","Iceland · planned grid & plant outages"],
- src1:["Viðhaldsáætlun spegluð frá Orkugátt","Outage schedule mirrored from the Orkugátt portal"],
+ src1:["Viðhaldsáætlun spegluð frá Orkugátt.","Outage schedule mirrored from the Orkugátt portal ·"],
  src2:["MW-tölur eru áætlanir byggðar á uppgefnu uppsettu afli — sjá skýringar neðst.","MW impact figures are added estimates from publicly listed unit capacities — see notes below."],
  ntH2:["Tilkynningar stjórnstöðvar — atvik og birting","Control-room events — occurred vs published"],
  ntSub:["Tilkynningar frá stjórnstöð Landsnets · „Töf“ sýnir hve langan tíma tók að birta atvikið á vef þeirra (mælt af vöktun þessarar síðu).","Tilkynningar frá stjórnstöð · \"Lag\" is how long Landsnet took to publish the event on their page (measured by this site's monitor)."],
@@ -319,7 +351,7 @@ const I18N={ /* [íslenska, English] */
  hourly2:[" · tengt dagavali að neðan"," · linked to the day picker below"],
  peakUnit:["MW hámark úr rekstri","MW peak offline"],
  htipDefault:["Færðu músina yfir línuna fyrir sundurliðun eftir klukkustundum.","Hover the line for the hourly breakdown."],
- dayPanelLbl:["Veldu dag — uppfærir klukkustundayfirlitið að ofan","Pick a day — updates the hourly view above"],
+ dayPanelLbl:["Veldu dag – uppfærir klukkustundayfirlit hér að ofan","Pick a day — updates the hourly view above"],
  pickDay:["Veldu dag","Pick a day"],
  prevDay:["‹ Fyrri dagur","‹ Previous day"],nextDay:["Næsti dagur ›","Next day ›"],
  installed:["Uppsett afl ≈ 3 060 MW","Installed capacity ≈ 3 060 MW"],
@@ -361,11 +393,11 @@ const I18N={ /* [íslenska, English] */
  wrongPw:["rangt aðgangsorð","wrong password"],loginUnavail:["innskráning ekki tiltæk","login unavailable"],
  archImport:["(safnhleðsla)","(archive import)"],
  stampDelayed:["FRÍ FORSKOÐUN (72 klst seinkun) · ","FREE PREVIEW (72 h delay) · "],
- stampFetched:["gögn sótt","data fetched"],
- stampNoPublic:["frí forskoðun: opinber gögn ekki enn tiltæk — skráðu þig inn fyrir rauntíma","free preview: public outage data not yet available — log in for live"],
- stampFallback:["innbyggt afrit frá 6. júl 2026 (data.json ekki tiltækt)","built-in snapshot of 06 Jul 2026 (live data.json unavailable)"],
+ stampFetched:["Gögn uppfærð","data fetched"],
+ stampNoPublic:["Frí forskoðun: opinber gögn ekki enn tiltæk — skráðu þig inn fyrir rauntíma.","Free preview: public outage data not yet available — log in for live."],
+ stampFallback:["Innbyggt afrit frá 6. júlí 2026 (data.json ekki tiltækt).","Built-in snapshot of 06 Jul 2026 (live data.json unavailable)."],
  evH2:["Atburðir í kerfinu — sjálfvirk greining","Grid events — automatic analysis"],
- evSub:["Skyndilegar breytingar (≥29 MW á 5 mín) greindar sjálfkrafa út frá heildarflutningi og sniðum, tengdar tilkynningum stjórnstöðvar þegar þær birtast.","Sudden changes (≥29 MW in 5 min) detected automatically from total flow and snið cuts, linked to control-room notifications when they appear."],
+ evSub:["Skyndilegar breytingar (≥29 MW á 5 mín) greindar sjálfkrafa út frá heildarflutningi og flutningssniðum kerfisins, tengdar tilkynningum stjórnstöðvar þegar þær birtast.","Sudden changes (≥29 MW in 5 min) detected automatically from total flow and the grid\u2019s transmission-corridor (snið) cuts, linked to control-room notifications when they appear."],
  evDrop:["Fall","Drop"],evRise:["Hækkun","Rise"],
  evOver:["á","over"],evMin:["mín","min"],
  evMovers:["Mest hreyfing","Largest movers"],
@@ -526,7 +558,8 @@ async function boot(){
   const j=await r.json();
   D=j.operations.map(mapRaw).filter(Boolean);
   if(D.length<10)throw new Error("too few records");
-  stamp.textContent=(j.delayed?t("stampDelayed"):"")+t("stampFetched")+" "+new Date(j.fetchedAt).toLocaleString(LOC(),{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false});
+  const sentEnd=LANG==="is"?".":" ·";
+  stamp.textContent=(j.delayed?t("stampDelayed"):"")+t("stampFetched")+" "+fmtDate(new Date(j.fetchedAt),{day:"numeric",month:"long",year:"numeric",hour:true})+sentEnd;
  }catch(e){
   D=FALLBACK.slice();
   stamp.textContent=t("stampFallback");
@@ -539,7 +572,7 @@ async function boot(){
 /* ---------------- helpers ---------------- */
 const TOTAL_CAP=3060;
 const ST_CLS={live:"live",done:"done"};
-const fmtD=iso=>{const d=new Date(iso);return d.toLocaleDateString(LOC(),{day:"2-digit",month:"short",year:"numeric"})+" "+iso.slice(11,16)};
+const fmtD=iso=>{const d=new Date(iso);return fmtDate(d,{day:"2-digit",month:"short",year:"numeric"})+" "+iso.slice(11,16)};
 const durTxt=(s,e)=>{const ms=new Date(e)-new Date(s),h=ms/36e5;if(h<48)return Math.round(h)+" "+t("u_h");const d=h/24;if(d<62)return Math.round(d)+" "+t("u_days");return (d/30.44).toFixed(1)+" "+t("u_months")};
 
 /* de-duplicated MW total for a given moment */
@@ -572,7 +605,7 @@ function initTime(){
  const today=new Date();today.setHours(12,0,0,0);
  const dMin=D.length?new Date(D[0].s):today;
  T0=today>=dMin?today:dMin;
- const fmt=d=>d.toLocaleDateString(LOC(),{day:"2-digit",month:"short",year:"numeric"});
+ const fmt=d=>fmtDate(d,{day:"2-digit",month:"short",year:"numeric"});
  document.getElementById("endL").textContent=fmt(T0);
  document.getElementById("endR").textContent=fmt(new Date(T0.getTime()+178*864e5));
  slider.value=0;
@@ -581,7 +614,7 @@ function renderDay(){
  const t0d=new Date(T0.getTime()+slider.value*864e5);
  prevBtn.disabled=+slider.value<=+slider.min;
  nextBtn.disabled=+slider.value>=+slider.max;
- document.getElementById("dateLbl").textContent=t0d.toLocaleDateString(LOC(),{weekday:"short",day:"2-digit",month:"short",year:"numeric"});
+ document.getElementById("dateLbl").textContent=fmtDate(t0d,{weekday:"short",day:"2-digit",month:"short",year:"numeric"});
  const{sum,parts}=mwAt(t0d);
  document.getElementById("mwOut").textContent=sum.toLocaleString(LOC());
  document.getElementById("mwSub").textContent=parts.length?parts.length+" "+(parts.length>1?t("stationsAffected"):t("stationAffected1")):t("noGenSched");
@@ -665,7 +698,7 @@ boot();
 
 /* ---------------- render: hourly line for the selected day ---------------- */
 function renderDayChart(dayStart){
- document.getElementById("h48from").textContent=dayStart.toLocaleDateString(LOC(),{weekday:"long",day:"2-digit",month:"short",year:"numeric"});
+ document.getElementById("h48from").textContent=fmtDate(dayStart,{weekday:"long",day:"2-digit",month:"long",year:"numeric"});
  const hours=[];
  for(let i=0;i<24;i++){
   const t0=new Date(dayStart.getTime()+i*36e5);
@@ -789,9 +822,9 @@ async function loadLive(){
  document.getElementById("livePeak").innerHTML=
   (isDelayed?`<span style="color:var(--magma);font-weight:600">${t("preview1")} ${Math.round(DELAY_H)} ${t("preview2")}</span><br>`:"")+
   (stale?`<span style="color:var(--magma);font-weight:600">${t("staleWarn1")} ${ageMin>120?Math.round(ageMin/60)+" "+t("u_h"):ageMin+" "+t("u_min")} ${t("staleWarn2")}</span><br>`:"")+
-  `${t("low12")} <b style="color:var(--basalt)">${vmin.toFixed(0)} MW</b> · ${t("high12")} <b>${vmax.toFixed(0)} MW</b><br>${t("updatedWord")} ${new Date(cur.t).toLocaleTimeString(LOC(),{hour:"2-digit",minute:"2-digit",hour12:false})} · ${inWin.length} ${inWin.length===1?t("notif1"):t("notifN")}`;
+  `${t("low12")} <b style="color:var(--basalt)">${vmin.toFixed(0)} MW</b> · ${t("high12")} <b>${vmax.toFixed(0)} MW</b><br>${t("updatedWord")} ${fmtTime(new Date(cur.t))} · ${inWin.length} ${inWin.length===1?t("notif1"):t("notifN")}`;
  const tip=document.getElementById("ltip"),dot=document.getElementById("livedot");
- const hhmm=x=>new Date(x).toLocaleTimeString(LOC(),{hour:"2-digit",minute:"2-digit",hour12:false});
+ const hhmm=x=>fmtTime(new Date(x));
  const showPoint=p=>{
   dot.style.display="";dot.setAttribute("cx",x(p.t));dot.setAttribute("cy",y(p.v));
   tip.innerHTML=`${hhmm(p.t)} → <b style="color:var(--hydro)">${p.v.toLocaleString(LOC(),{maximumFractionDigits:1})}</b> ${t("totalFlow")}`;
@@ -853,7 +886,7 @@ async function loadNotifTable(){
  const rows=data.notifications;
  if(!rows||!rows.length)return;
  document.getElementById("notifPanel").style.display="";
- const fmt=iso=>new Date(iso).toLocaleString(LOC(),{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",hour12:false});
+ const fmt=iso=>fmtDate(new Date(iso),{day:"2-digit",month:"short",hour:true});
  const lagTxt=m=>m<0?"—":m<60?m+" "+t("u_min"):m<48*60?(m/60).toFixed(1)+" "+t("u_h"):Math.round(m/1440)+" d";
  // entries ingested in the initial archive import share (almost) one first_seen;
  // detect that moment as the monitor start and blank their lag
@@ -957,8 +990,8 @@ async function loadEvents(){
   if(cur&&tms-cur.end<=30*6e4){cur.items.push(s);cur.end=tms;}
   else{cur={start:tms,end:tms,items:[s]};clusters.push(cur);}
  });
- const hhmm=x=>new Date(x).toLocaleTimeString(LOC(),{hour:"2-digit",minute:"2-digit",hour12:false});
- const dmy=x=>new Date(x).toLocaleDateString(LOC(),{day:"2-digit",month:"short"});
+ const hhmm=x=>fmtTime(new Date(x));
+ const dmy=x=>fmtDate(new Date(x),{day:"2-digit",month:"short"});
  const fmtLag=m=>m<60?m+" "+t("u_min"):m<48*60?(m/60).toFixed(1)+" "+t("u_h"):Math.round(m/1440)+" d";
  const html=clusters.slice().reverse().map(c=>{
   const first=c.items[0],last=c.items[c.items.length-1];
