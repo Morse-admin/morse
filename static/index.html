@@ -9,7 +9,7 @@
 <style>
 :root{
   /* Icelandic flag: blue #02529C, red #DC1E35, white */
-  --ice:#E2EDF8;          /* light-blue page background */
+  --ice:#FFFFFF;          /* white page background */
   --panel:#FFFFFF;        /* flag-white boxes */
   --basalt:#0A2A52;       /* dark blue text */
   --steam:#46648A;        /* muted blue-grey text */
@@ -31,7 +31,8 @@ body{background:var(--ice);color:var(--basalt);font-family:var(--sans);font-size
 
 /* ---------- header ---------- */
 header{padding:34px 0 22px;border-bottom:2px solid var(--basalt);position:relative}
-.langsw{position:absolute;top:36px;right:0;display:flex;gap:6px}
+.topbar{position:absolute;top:28px;right:0;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:flex-end;max-width:78%}
+.langsw{display:flex;gap:6px}
 .langsw button{font-size:20px;line-height:1;padding:4px 7px;border:1.5px solid transparent;background:#fff;cursor:pointer;border-radius:3px;filter:grayscale(.65);opacity:.7}
 .langsw button.on{border-color:var(--hydro);filter:none;opacity:1}
 .langsw button:hover{filter:none;opacity:1}
@@ -41,19 +42,19 @@ h1 .thin{color:var(--hydro)}
 .src{margin-top:8px;font-size:13px;color:var(--steam)}
 .src a{color:var(--hydro)}
 
-/* ---------- access bar ---------- */
-.access{margin-top:18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);padding:10px 14px}
+/* ---------- access controls (in header) ---------- */
+.access{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .access .mode{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px}
 .access .mode.free{background:var(--magma-soft);color:var(--magma);border:1px solid var(--magma)}
 .access .mode.livem{background:var(--moss-soft);color:var(--moss);border:1px solid var(--moss)}
-.access .msg{font-size:13.5px;color:var(--steam)}
-.access input{font-family:var(--mono);font-size:13px;padding:5px 8px;border:1px solid var(--line);width:160px}
+.access .msg{font-size:12.5px;color:var(--steam)}
+.access input{font-family:var(--mono);font-size:12px;padding:5px 8px;border:1px solid var(--line);width:130px}
 .access button{font-family:var(--mono);font-size:12px;font-weight:600;padding:6px 12px;border:1px solid var(--basalt);background:var(--basalt);color:#fff;cursor:pointer}
 .access button:hover{background:var(--hydro);border-color:var(--hydro)}
 .access .err{color:var(--magma);font-family:var(--mono);font-size:12px}
 
 /* ---------- notifications table ---------- */
-.ntbl{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--magma);padding:22px}
+.ntbl{margin-top:26px;background:var(--panel);border:2px solid var(--basalt);padding:22px}
 .ntbl h2{font-family:var(--disp);font-size:20px;font-weight:700;margin-bottom:4px}
 .ntbl .sub{font-size:13px;color:var(--steam);margin-bottom:12px}
 .ntbl .scroll{max-height:340px;overflow-y:auto;border-top:1.5px solid var(--basalt)}
@@ -63,11 +64,11 @@ table.notifs td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-al
 table.notifs td.mono{font-family:var(--mono);font-size:12px;white-space:nowrap}
 table.notifs td.lag{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--magma);font-weight:600}
 table.notifs td.lag.fast{color:var(--moss)}
-table.notifs tr:hover td{background:#fff}
+table.notifs tr:hover td{background:var(--hydro-soft)}
 .ntbl .foot2{font-size:11.5px;color:var(--steam);margin-top:8px}
 
 /* ---------- live consumption panel ---------- */
-.live{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--hydro);padding:22px 22px 18px}
+.live{margin-top:26px;background:var(--panel);border:2px solid var(--basalt);padding:22px 22px 18px}
 .live .big{font-family:var(--disp);font-weight:700;font-size:clamp(30px,5vw,44px);line-height:1;color:var(--hydro);font-variant-numeric:tabular-nums}
 .live .big small{font-size:.42em;font-weight:600;color:var(--basalt)}
 .lcons{fill:none;stroke:var(--hydro);stroke-width:2;stroke-linejoin:round}
@@ -79,12 +80,19 @@ table.notifs tr:hover td{background:#fff}
 .live .peak b{color:var(--hydro)}
 
 /* ---------- hourly day profile ---------- */
-.h48{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--basalt);padding:22px 22px 18px}
+.h48{margin-top:26px;background:var(--panel);border:2px solid var(--basalt);padding:22px 22px 18px}
 .h48-head{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between}
 .h48 .big{font-family:var(--disp);font-weight:700;font-size:clamp(30px,5vw,44px);line-height:1;color:var(--magma);font-variant-numeric:tabular-nums}
 .h48 .big small{font-size:.42em;font-weight:600;color:var(--basalt)}
 .h48 .peak{font-family:var(--mono);font-size:12px;color:var(--steam);text-align:right}
 .h48 .peak b{color:var(--magma)}
+.hoverbig{font-family:var(--disp);font-weight:700;font-size:clamp(19px,3vw,29px);line-height:1.3;color:var(--basalt);min-height:40px;margin-top:6px}
+.hoverbig .stns{display:block;font-family:var(--mono);font-size:12px;font-weight:400;color:var(--steam);margin-top:2px}
+.sidebig{font-family:var(--disp);font-weight:700;font-size:clamp(20px,3vw,30px);line-height:1.1;font-variant-numeric:tabular-nums}
+.sidebig small{font-size:.5em;font-weight:600;color:var(--basalt)}
+.live .sidebig{color:var(--hydro)}
+.h48 .sidebig{color:var(--magma)}
+.peak .sidebig{display:block;margin-bottom:4px}
 .chart-wrap{margin-top:14px;position:relative}
 .chart-wrap svg{display:block;width:100%;height:auto}
 .hgrid{stroke:var(--line);stroke-width:1}
@@ -100,7 +108,7 @@ table.notifs tr:hover td{background:#fff}
 .htip .stns{color:var(--steam)}
 
 /* ---------- scrubber panel ---------- */
-.now{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--magma);padding:22px 22px 26px}
+.now{margin-top:26px;background:var(--panel);border:2px solid var(--basalt);padding:22px 22px 26px}
 .now-head{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between}
 .readout .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steam)}
 .readout .big{font-family:var(--disp);font-weight:700;font-size:clamp(40px,7vw,64px);line-height:1;color:var(--magma);font-variant-numeric:tabular-nums}
@@ -138,7 +146,7 @@ table.notifs tr:hover td{background:#fff}
 /* ---------- outage list ---------- */
 .list{border-top:2px solid var(--basalt)}
 .row{display:grid;grid-template-columns:86px 1fr 200px;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);background:transparent;transition:background .15s}
-.row:hover{background:#fff}
+.row:hover{background:var(--hydro-soft)}
 .row.dim{opacity:.45}
 .kks{font-family:var(--mono)}
 .kks .code{display:inline-block;font-weight:600;font-size:14px;padding:2px 7px;background:var(--basalt);color:#fff}
@@ -161,6 +169,9 @@ table.notifs tr:hover td{background:#fff}
 .foot{margin-top:36px;padding-top:14px;border-top:2px solid var(--basalt);font-size:12.5px;color:var(--steam);max-width:760px}
 .foot b{color:var(--basalt)}
 
+@media(max-width:840px){
+  .topbar{position:static;margin-top:12px;justify-content:flex-start;max-width:100%}
+}
 @media(max-width:680px){
   .row{grid-template-columns:70px 1fr;grid-template-rows:auto auto}
   .mw{grid-column:2;text-align:left;margin-top:4px}
@@ -173,33 +184,33 @@ table.notifs tr:hover td{background:#fff}
 <div class="wrap">
 
 <header>
-  <div class="langsw"><button id="langIS" title="Íslenska">🇮🇸</button><button id="langEN" title="English">🇬🇧</button></div>
+  <div class="topbar">
+    <div class="access" id="accessBar" style="display:none">
+      <span class="mode" id="accessMode">…</span>
+      <span class="msg" id="accessMsg"></span>
+      <span id="loginBox" style="display:none">
+        <input type="password" id="pw" placeholder="aðgangsorð">
+        <button id="loginBtn">Opna rauntíma</button>
+        <span class="err" id="loginErr"></span>
+      </span>
+      <button id="logoutBtn" class="lgout" style="display:none">Útskrá</button>
+    </div>
+    <div class="langsw"><button id="langIS" title="Íslenska">🇮🇸</button><button id="langEN" title="English">🇬🇧</button></div>
+  </div>
   <div class="eyebrow" data-i18n="eyebrow"></div>
   <h1><span id="mt1">MORSE</span> <span class="thin" id="mt2">— SKÝR SKILABOÐ</span></h1>
   <div class="src"><span data-i18n="src1"></span> <b id="stamp">…</b> · <span data-i18n="src2"></span></div>
 </header>
 
-<div class="access" id="accessBar" style="display:none">
-  <span class="mode" id="accessMode">…</span>
-  <span class="msg" id="accessMsg"></span>
-  <span id="loginBox" style="display:none">
-    <input type="password" id="pw" placeholder="access password">
-    <button id="loginBtn">Unlock live</button>
-    <span class="err" id="loginErr"></span>
-  </span>
-  <button id="logoutBtn" style="display:none">Log out</button>
-</div>
-
 <section class="live" id="livePanel" style="display:none">
   <div class="h48-head">
-    <div>
+    <div style="flex:1;min-width:260px">
       <div class="eyebrow"><span data-i18n="liveEye1"></span> <span style="color:var(--magma)">◆</span> <span data-i18n="liveEye2"></span></div>
-      <div class="big"><span id="liveNow">–</span><small> <span data-i18n="liveUnit"></span></small></div>
+      <div class="hoverbig htip" id="ltip" data-i18n="ltipDefault"></div>
     </div>
-    <div class="peak" id="livePeak"></div>
+    <div class="peak"><span class="sidebig"><span id="liveNow">–</span> <small><span data-i18n="liveUnit"></span></small></span><span id="livePeak"></span></div>
   </div>
   <div class="chart-wrap" id="liveWrap"></div>
-  <div class="htip" id="ltip" data-i18n="ltipDefault"></div>
 </section>
 
 <section class="ntbl" id="notifPanel" style="display:none">
@@ -213,14 +224,13 @@ table.notifs tr:hover td{background:#fff}
 
 <section class="h48">
   <div class="h48-head">
-    <div>
+    <div style="flex:1;min-width:260px">
       <div class="eyebrow"><span data-i18n="hourly1"></span> <span id="h48from"></span><span data-i18n="hourly2"></span></div>
-      <div class="big"><span id="h48now">0</span><small> <span data-i18n="peakUnit"></span></small></div>
+      <div class="hoverbig htip" id="htip" data-i18n="htipDefault"></div>
     </div>
-    <div class="peak" id="h48peak"></div>
+    <div class="peak"><span class="sidebig"><span id="h48now">0</span> <small><span data-i18n="peakUnit"></span></small></span><span id="h48peak"></span></div>
   </div>
   <div class="chart-wrap" id="chartWrap"></div>
-  <div class="htip" id="htip" data-i18n="htipDefault"></div>
 </section>
 
 <section class="now">
@@ -483,7 +493,7 @@ async function boot(){
   const j=await r.json();
   D=j.operations.map(mapRaw).filter(Boolean);
   if(D.length<10)throw new Error("too few records");
-  stamp.textContent=(j.delayed?t("stampDelayed"):"")+t("stampFetched")+" "+new Date(j.fetchedAt).toLocaleString(LOC(),{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
+  stamp.textContent=(j.delayed?t("stampDelayed"):"")+t("stampFetched")+" "+new Date(j.fetchedAt).toLocaleString(LOC(),{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false});
  }catch(e){
   D=FALLBACK.slice();
   stamp.textContent=t("stampFallback");
@@ -662,13 +672,17 @@ function renderDayChart(dayStart){
  const pk=hours.reduce((a,b)=>b.sum>a.sum?b:a,hours[0]);
  document.getElementById("h48peak").innerHTML=`${t("dayLow")} <b style="color:var(--basalt)">${vmin.toLocaleString(LOC())} MW</b> · ${t("peakWord")} <b>${vmax.toLocaleString(LOC())} MW</b> ${t("atWord")} ${String(pk.t.getHours()).padStart(2,"0")}:00<br>${t("yaxis")} ${ymin}–${ymax} MW · ${t("estWord")}`;
  const tip=document.getElementById("htip");
- document.getElementById("chartWrap").onmousemove=e=>{
-  const r=e.target.closest(".hhit");if(!r)return;
-  const i=+r.dataset.h,h=hours[i];
+ const hh=n=>String(n).padStart(2,"0")+":00";
+ const showHour=i=>{
+  const h=hours[i];
   const dot=document.getElementById("hdot");
   dot.style.display="";dot.setAttribute("cx",x(i));dot.setAttribute("cy",y(h.sum));
-  const hh=n=>String(n).padStart(2,"0")+":00";
   tip.innerHTML=`${hh(h.t.getHours())}–${hh((h.t.getHours()+1)%24)} → <b>${h.sum} ${t("mwOffline")}</b> <span class="stns">${h.parts.length?"· "+h.parts.map(p=>(NAMES[p.k]||p.k)+" −"+p.v).join(", "):"· "+t("noGenOut")}</span>`;
+ };
+ showHour(hours.indexOf(pk));   // default: the day's peak hour
+ document.getElementById("chartWrap").onmousemove=e=>{
+  const r=e.target.closest(".hhit");if(!r)return;
+  showHour(+r.dataset.h);
  };
 }
 
@@ -742,20 +756,23 @@ async function loadLive(){
  document.getElementById("livePeak").innerHTML=
   (isDelayed?`<span style="color:var(--magma);font-weight:600">${t("preview1")} ${Math.round(DELAY_H)} ${t("preview2")}</span><br>`:"")+
   (stale?`<span style="color:var(--magma);font-weight:600">${t("staleWarn1")} ${ageMin>120?Math.round(ageMin/60)+" "+t("u_h"):ageMin+" "+t("u_min")} ${t("staleWarn2")}</span><br>`:"")+
-  `${t("low12")} <b style="color:var(--basalt)">${vmin.toFixed(0)} MW</b> · ${t("high12")} <b>${vmax.toFixed(0)} MW</b><br>${t("updatedWord")} ${new Date(cur.t).toLocaleTimeString(LOC(),{hour:"2-digit",minute:"2-digit"})} · ${inWin.length} ${inWin.length===1?t("notif1"):t("notifN")}`;
+  `${t("low12")} <b style="color:var(--basalt)">${vmin.toFixed(0)} MW</b> · ${t("high12")} <b>${vmax.toFixed(0)} MW</b><br>${t("updatedWord")} ${new Date(cur.t).toLocaleTimeString(LOC(),{hour:"2-digit",minute:"2-digit",hour12:false})} · ${inWin.length} ${inWin.length===1?t("notif1"):t("notifN")}`;
  const tip=document.getElementById("ltip"),dot=document.getElementById("livedot");
- const hhmm=x=>new Date(x).toLocaleTimeString(LOC(),{hour:"2-digit",minute:"2-digit"});
+ const hhmm=x=>new Date(x).toLocaleTimeString(LOC(),{hour:"2-digit",minute:"2-digit",hour12:false});
+ const showPoint=p=>{
+  dot.style.display="";dot.setAttribute("cx",x(p.t));dot.setAttribute("cy",y(p.v));
+  tip.innerHTML=`${hhmm(p.t)} → <b style="color:var(--hydro)">${p.v.toLocaleString(LOC(),{maximumFractionDigits:1})}</b> ${t("totalFlow")}`;
+ };
+ showPoint(pts[pts.length-1]);   // default: the newest reading
  document.getElementById("liveWrap").onmousemove=e=>{
   const nd=e.target.closest(".notifdot");
   if(nd){
    const n=inWin[+nd.dataset.n];
-   tip.innerHTML=`<b>◆ ${hhmm(n.t)}</b> ${n.short}${n.long?` <span class="stns">— ${n.long}</span>`:""}`;
+   tip.innerHTML=`<b style="color:var(--magma)">◆ ${hhmm(n.t)}</b> ${n.short}${n.long?` <span class="stns">— ${n.long}</span>`:""}`;
    return;
   }
   const r=e.target.closest(".hhit");if(!r)return;
-  const p=pts[+r.dataset.p];
-  dot.style.display="";dot.setAttribute("cx",x(p.t));dot.setAttribute("cy",y(p.v));
-  tip.innerHTML=`${hhmm(p.t)} → <b style="color:var(--hydro)">${p.v.toLocaleString(LOC(),{maximumFractionDigits:1})}</b> ${t("totalFlow")}`;
+  showPoint(pts[+r.dataset.p]);
  };
 }
 loadLive();
@@ -803,7 +820,7 @@ async function loadNotifTable(){
  const rows=data.notifications;
  if(!rows||!rows.length)return;
  document.getElementById("notifPanel").style.display="";
- const fmt=iso=>new Date(iso).toLocaleString(LOC(),{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+ const fmt=iso=>new Date(iso).toLocaleString(LOC(),{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",hour12:false});
  const lagTxt=m=>m<0?"—":m<60?m+" "+t("u_min"):m<48*60?(m/60).toFixed(1)+" "+t("u_h"):Math.round(m/1440)+" d";
  // entries ingested in the initial archive import share (almost) one first_seen;
  // detect that moment as the monitor start and blank their lag
@@ -829,7 +846,7 @@ setInterval(loadNotifTable,5*60*1000);
  const finals=parts.map(el=>el.textContent);
  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
  const total=finals.join("");
- const N=total.length, DUR=3000, TICK=50;
+ const N=total.length, DUR=6000, TICK=60;
  const rnd=()=>Math.random()<.55?"·":"−";
  // start as morse of the same length
  parts.forEach((el,pi)=>{el.textContent=finals[pi].replace(/[^ ]/g,rnd)});
