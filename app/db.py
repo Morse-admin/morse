@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS shifts (
     snid_delta  jsonb                   -- per-slice change over the same window
 );
 CREATE INDEX IF NOT EXISTS shifts_ts_idx ON shifts (ts DESC);
+ALTER TABLE shifts ADD COLUMN IF NOT EXISTS snid_from jsonb;
+ALTER TABLE shifts ADD COLUMN IF NOT EXISTS snid_to jsonb;
 
 -- control-room notifications (Tilkynningar frá stjórnstöð) ------------------
 CREATE TABLE IF NOT EXISTS notifications (

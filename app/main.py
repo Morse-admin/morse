@@ -170,9 +170,11 @@ async def reextract_snid(request: Request):
         return JSONResponse({"error": "bad token"}, status_code=401)
     import json as _json
     from .landsnet import extract_series
+    force = request.query_params.get("force") == "1"
     fixed = 0
     async with pool.connection() as conn:
         cur = await conn.execute(
+            "SELECT ts, raw FROM load_log" if force else
             "SELECT ts, raw FROM load_log WHERE snid = '{}'::jsonb OR snid IS NULL")
         rows = await cur.fetchall()
         for ts, raw in rows:
@@ -229,12 +231,13 @@ async def shifts(request: Request, days: int = Query(7, ge=1, le=365)):
     start = end - timedelta(days=days)
     async with pool.connection() as conn:
         cur = await conn.execute(
-            """SELECT ts, window_min, from_mw, to_mw, delta_mw, snid_delta
+            """SELECT ts, window_min, from_mw, to_mw, delta_mw, snid_delta, snid_from, snid_to
                FROM shifts WHERE ts > %s AND ts <= %s ORDER BY ts DESC""", (start, end))
         rows = await cur.fetchall()
     return {"delayed": cut is not None, "shifts": [
         {"ts": r[0].isoformat(), "window_min": r[1], "from_mw": r[2],
-         "to_mw": r[3], "delta_mw": r[4], "snid_delta": r[5]} for r in rows]}
+         "to_mw": r[3], "delta_mw": r[4], "snid_delta": r[5],
+         "snid_from": r[6], "snid_to": r[7]} for r in rows]}
 
 
 @app.get("/api/notifications")

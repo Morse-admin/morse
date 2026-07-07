@@ -97,6 +97,8 @@ def extract_series(items: list[dict]):
         if not isinstance(mw, (int, float)):
             continue
         key = fix_mojibake(key)
+        if key.upper().startswith("SNI"):
+            key = key.replace("\ufffd", "Ð")   # unify names damaged upstream
         if key == TOTAL_KEY:
             total = float(mw)
             total_good = bool(it.get("good"))
@@ -182,9 +184,10 @@ async def detect_shift(conn, ts, total: float, snid: dict) -> None:
         if abs(float(snid.get(k, 0)) - float(prev_snid.get(k, 0))) >= 5
     }
     await conn.execute(
-        """INSERT INTO shifts (ts, window_min, from_mw, to_mw, delta_mw, snid_delta)
-           VALUES (%s, %s, %s, %s, %s, %s::jsonb)""",
-        (ts, SHIFT_WINDOW_MIN, prev_total, total, round(delta, 1), json.dumps(snid_delta)),
+        """INSERT INTO shifts (ts, window_min, from_mw, to_mw, delta_mw, snid_delta, snid_from, snid_to)
+           VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s::jsonb, %s::jsonb)""",
+        (ts, SHIFT_WINDOW_MIN, prev_total, total, round(delta, 1),
+         json.dumps(snid_delta), json.dumps(prev_snid), json.dumps(snid)),
     )
     log.warning("SHIFT DETECTED: %+.0f MW (%.0f → %.0f) — snið deltas: %s",
                 delta, prev_total, total, snid_delta)
