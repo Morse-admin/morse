@@ -59,6 +59,10 @@ h1{display:flex;align-items:center;flex-wrap:wrap;column-gap:18px;row-gap:2px;ma
 .access button:hover{background:var(--hydro);border-color:var(--hydro)}
 .access .err{color:var(--magma);font-family:var(--mono);font-size:12px}
 
+/* ---------- notification readout under the chart ---------- */
+.notiftext{display:none;margin-top:10px;font-size:13px;line-height:1.55;color:var(--magma)}
+.notiftext b{font-family:var(--mono);font-weight:600}
+
 /* ---------- chart range selector ---------- */
 .range-chips{display:flex;gap:6px;margin-top:14px}
 .rbtn{font-family:var(--mono);font-size:11px;font-weight:600;padding:4px 11px;border:none;border-radius:9999px;background:var(--chip-bg);color:var(--steam);cursor:pointer;transition:background .15s,color .15s}
@@ -286,6 +290,7 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
   </div>
   <div class="range-chips" id="liveRange"></div>
   <div class="chart-wrap" id="liveWrap"></div>
+  <div class="notiftext" id="liveNotifText"></div>
   <div class="eyebrow belowchart"><span data-i18n="liveEyeA"></span> <span id="liveEyeRange"></span> · <span style="color:var(--magma)">◆</span> <span data-i18n="liveEye2"></span></div>
 </section>
 
@@ -893,6 +898,8 @@ async function loadLive(){
  }catch(e){}
  document.getElementById("livePanel").style.display="";
  renderLiveRange();
+ const ntx=document.getElementById("liveNotifText");
+ if(ntx){ntx.style.display="none";ntx.innerHTML="";}
 
  const t1=new Date(load[load.length-1].ts).getTime(), t0=t1-HOURS*36e5;
  let pts=load.map(p=>({t:new Date(p.ts).getTime(),v:p.total_mw})).filter(p=>p.t>=t0);
@@ -984,8 +991,11 @@ async function loadLive(){
   const nd=e.target.closest(".notifhit")||e.target.closest(".notifdot");
   if(nd){
    const n=inWin[+nd.dataset.n];
-   heroVal.textContent="◆ "+hhmm(n.t);
-   heroSub.innerHTML=`${n.short}${n.long?` <span class="stns">— ${n.long}</span>`:""}`;
+   const el=document.getElementById("liveNotifText");
+   const when=HOURS>48?fmtDate(new Date(n.t),{day:"numeric",month:"short",hour:true})
+                      :(LANG==="is"?"kl. ":"")+hhmm(n.t);
+   el.innerHTML=`◆ <b>${when}</b> · <b>${n.short}</b>${n.long?` — ${n.long}`:""}`;
+   el.style.display="block";   // stays visible so long texts can be read calmly
    return;
   }
   const r=e.target.closest(".hhit");if(!r)return;
