@@ -130,7 +130,7 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .daylbl{font-family:var(--mono);font-size:11px;font-weight:600;fill:var(--basalt);letter-spacing:.08em}
 .htip{font-family:var(--mono);font-size:12.5px;margin-top:10px;min-height:20px;color:var(--basalt)}
 .htip b{color:var(--magma)}
-.htip .stns{color:var(--steam)}
+.stns{color:var(--steam);font-family:var(--mono);font-size:12px}
 
 /* ---------- scrubber panel ---------- */
 .now{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 22px 26px}
@@ -196,12 +196,38 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .foot b{color:var(--basalt)}
 
 @media(max-width:840px){
-  .topbar{position:static;margin-top:12px;justify-content:flex-start;max-width:100%}
+  header{display:flex;flex-direction:column}
+  header .eyebrow{order:1}
+  header h1{order:2}
+  header .topbar{order:3;position:static;margin:16px 0 0;justify-content:flex-start;max-width:100%;gap:10px}
+  header .src{order:4;margin-top:12px}
 }
 @media(max-width:680px){
+  .wrap{padding:0 14px 60px}
+  header{padding-top:22px}
+  h1{row-gap:6px}
+  /* cards breathe less on small screens */
+  .now,.h48,.live,.ntbl,.events{padding:16px 14px;margin-top:18px}
+  /* hero + context stack vertically */
+  .metric-row{flex-direction:column;gap:12px}
+  .ctx{text-align:left;white-space:normal;padding-top:0}
+  .hero .val{font-size:clamp(30px,9vw,40px)}
+  /* charts: keep a readable scale and swipe sideways instead of shrinking */
+  .chart-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .chart-wrap svg{min-width:760px;display:block}
+  .axlbl,.aylbl{font-size:13px}
+  /* notifications table: swipe sideways instead of crushing columns */
+  .ntbl .scroll{overflow-x:auto}
+  table.notifs{min-width:640px}
+  /* outage list rows */
   .row{grid-template-columns:70px 1fr;grid-template-rows:auto auto}
   .mw{grid-column:2;text-align:left;margin-top:4px}
   .now-head{flex-direction:column;align-items:stretch}
+  .scrub{max-width:none}
+  .scrub .ends{padding:0 8px}
+  .band-lbl{flex-wrap:wrap;gap:4px 12px}
+  .evcard .evtitle{font-size:18px}
+  .filters{margin:24px 0 12px}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
