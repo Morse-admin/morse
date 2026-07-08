@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morse — Spá · Skýr skilaboð</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="topbar">
+    <div class="access" id="accessBar" style="display:none">
+      <span class="mode" id="accessMode">…</span>
+      <span class="msg" id="accessMsg"></span>
+      <span id="loginBox" style="display:none">
+        <input type="password" id="pw" placeholder="aðgangsorð">
+        <button id="loginBtn">Opna rauntíma</button>
+        <span class="err" id="loginErr"></span>
+      </span>
+      <button id="logoutBtn" class="lgout" style="display:none">Útskrá</button>
+    </div>
+    <div class="langsw"><button id="langIS" title="Íslenska">🇮🇸</button><button id="langEN" title="English">🇬🇧</button></div>
+  </div>
+  <div class="eyebrow" data-i18n="eyebrowFc"></div>
+  <h1><div class="logo-main" id="mt1">MORSE</div><div class="logo-sub" id="mt2">SKÝR SKILABOÐ</div></h1>
+  <nav class="mainnav"><a href="./" data-i18n="navLive"></a><a href="forecast.html" data-i18n="navForecast" class="on"></a><a href="maintenance.html" data-i18n="navMaint"></a></nav>
+</header>
+
+<div class="lockbox" id="lockBox" style="display:none">
+  <b data-i18n="lockTitle"></b>
+  <span data-i18n="lockBody"></span>
+</div>
+
+<section class="live" id="fcPanel" style="display:none">
+  <h2 data-i18n="fcH2"></h2>
+  <div class="sub" data-i18n="fcSub"></div>
+  <div class="metric-row">
+    <div class="hero">
+      <div class="val" id="fcHeroVal">–</div>
+      <div class="sub" id="fcHeroSub"></div>
+    </div>
+    <div class="ctx" id="fcCtx"></div>
+  </div>
+  <div class="chart-wrap" id="fcWrap"></div>
+  <div class="eyebrow belowchart" id="fcCaption"></div>
+  <div class="modelnote" id="fcNote"></div>
+</section>
+
+<section class="prices" id="pmPanel" style="display:none">
+  <h2 data-i18n="pmH2"></h2>
+  <div class="sub" data-i18n="pmSub"></div>
+  <div class="metric-row">
+    <div class="hero">
+      <div class="val" id="pmHeroVal">–</div>
+      <div class="sub" id="pmHeroSub"></div>
+    </div>
+    <div class="ctx" id="pmCtx"></div>
+  </div>
+  <div class="chart-wrap" id="pmWrap"></div>
+  <div class="eyebrow belowchart" id="pmCaption"></div>
+</section>
+
+</div>
+<script src="shared.js"></script>
+<script>
+let FC=null,PM=null;
+
+async function loadForecast(){
+ try{
+  const r=await fetch("api/forecast?hours=48",{cache:"no-store"});
+  if(r.status===401){document.getElementById("lockBox").style.display="";applyLang();return;}
+  if(!r.ok)return;
+  FC=await r.json();
+ }catch(e){return}
+ document.getElementById("lockBox").style.display="none";
+ renderForecast();
+}
+
+function renderForecast(){
+ if(!FC||!FC.forecast||!FC.forecast.length)return;
+ document.getElementById("fcPanel").style.display="";
+ const hist=FC.history.map(p=>({t:new Date(p.ts).getTime(),v:p.mw}));
+ const fc=FC.forecast.map(p=>({t:new Date(p.ts).getTime(),v:p.mw,lo:p.lo,hi:p.hi}));
+ const t0=hist.length?hist[0].t:fc[0].t, t1=fc[fc.length-1].t;
+ const tNow=hist.length?hist[hist.length-1].t:fc[0].t;
+ const allV=hist.map(p=>p.v).concat(fc.map(p=>p.lo),fc.map(p=>p.hi));
+ const vmin=Math.min(...allV),vmax=Math.max(...allV);
+ const ymin=Math.max(0,Math.floor((vmin-20)/10)*10);
+ const ymax=Math.max(ymin+40,Math.ceil((vmax+20)/10)*10);
+ const range=ymax-ymin;
+ const step=[10,20,25,50,100,200,500].find(s=>range/s<=6)||500;
+ const W=960,H=250,L=56,R=14,T=18,B=32,PW=W-L-R,PH=H-T-B;
+ const x=t=>L+((t-t0)/(t1-t0))*PW;
+ const y=v=>T+PH-((v-ymin)/range)*PH;
+ let svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Total flow forecast">`;
+ for(let v=Math.ceil(ymin/step)*step;v<=ymax;v+=step){
+  svg+=`<line class="hgrid" x1="${L}" y1="${y(v)}" x2="${W-R}" y2="${y(v)}"/>`;
+  svg+=`<text class="aylbl" x="${L-7}" y="${y(v)+3}" text-anchor="end">${v}</text>`;
+ }
+ const firstMid=new Date(t0);firstMid.setHours(24,0,0,0);
+ for(let tt=firstMid.getTime();tt<=t1;tt+=864e5){
+  svg+=`<line class="hgrid" x1="${x(tt)}" y1="${T}" x2="${x(tt)}" y2="${T+PH}" style="stroke:var(--line)"/>`;
+  svg+=`<text class="axlbl" x="${x(tt)}" y="${H-14}" text-anchor="middle">${fmtDate(new Date(tt),{day:"numeric",month:"short"})}</text>`;
+ }
+ /* uncertainty band */
+ let band=fc.map((p,i)=>`${i?"L":"M"} ${x(p.t).toFixed(1)} ${y(p.hi).toFixed(1)}`).join(" ");
+ for(let i=fc.length-1;i>=0;i--)band+=` L ${x(fc[i].t).toFixed(1)} ${y(fc[i].lo).toFixed(1)}`;
+ svg+=`<path class="fband" d="${band} Z"/>`;
+ /* history line */
+ if(hist.length){
+  const dH=hist.map((p,i)=>`${i?"L":"M"} ${x(p.t).toFixed(1)} ${y(p.v).toFixed(1)}`).join(" ");
+  svg+=`<path class="fhist" d="${dH}"/>`;
+ }
+ /* forecast line (dashed) */
+ const dF=fc.map((p,i)=>`${i?"L":"M"} ${x(p.t).toFixed(1)} ${y(p.v).toFixed(1)}`).join(" ");
+ svg+=`<path class="fdash" d="${dF}"/>`;
+ /* "now" divider */
+ svg+=`<line class="fnow" x1="${x(tNow)}" y1="${T}" x2="${x(tNow)}" y2="${T+PH}"/>`;
+ svg+=`<text class="fnowlbl" x="${x(tNow)+4}" y="${T+10}">${t("fcNowLbl")}</text>`;
+ /* hover targets over forecast points */
+ svg+=`<circle class="livedot" id="fcdot" r="4" style="display:none"/>`;
+ const pts=hist.map(p=>({...p,fc:false})).concat(fc.map(p=>({...p,fc:true})));
+ for(let i=0;i<pts.length;i++){
+  const x0=i===0?L:(x(pts[i-1].t)+x(pts[i].t))/2, x1=i===pts.length-1?W-R:(x(pts[i].t)+x(pts[i+1].t))/2;
+  svg+=`<rect class="hhit" data-p="${i}" x="${x0.toFixed(1)}" y="${T}" width="${(x1-x0).toFixed(1)}" height="${PH}"/>`;
+ }
+ svg+=`<line class="hgrid" x1="${L}" y1="${T+PH}" x2="${W-R}" y2="${T+PH}" style="stroke:var(--basalt);stroke-width:1.5"/>`;
+ svg+=`</svg>`;
+ document.getElementById("fcWrap").innerHTML=svg;
+
+ const pk=fc.reduce((a,b)=>b.v>a.v?b:a,fc[0]);
+ const tr=fc.reduce((a,b)=>b.v<a.v?b:a,fc[0]);
+ const fmtT=tt=>fmtDate(new Date(tt),{day:"numeric",month:"short",hour:true});
+ document.getElementById("fcCtx").innerHTML=
+  `<div>${t("fcPeak")}: <b>${fmtNum(pk.v,0)} MW</b> (${fmtT(pk.t)})</div>`+
+  `<div>${t("fcTrough")}: <b>${fmtNum(tr.v,0)} MW</b> (${fmtT(tr.t)})</div>`+
+  `<div class="ctx-note">${t("fcBasis")} ${FC.basis_days} ${t("fcBasisDays")} · ${t("fcGenerated")} ${fmtTime(new Date(FC.generated_at))}</div>`;
+ document.getElementById("fcNote").textContent=FC.basis_days<7?t("fcYoung"):"";
+ document.getElementById("fcCaption").textContent="";
+ const heroVal=document.getElementById("fcHeroVal"),heroSub=document.getElementById("fcHeroSub");
+ const dot=document.getElementById("fcdot");
+ const showP=p=>{
+  dot.style.display="";dot.setAttribute("cx",x(p.t));dot.setAttribute("cy",y(p.v));
+  heroVal.textContent=fmtNum(p.v,0)+" MW";
+  heroSub.textContent=(p.fc?t("fcHeroLbl"):t("heroAtLbl"))+" ("+fmtT(p.t)+")"+
+   (p.fc?` · ${fmtNum(p.lo,0)}–${fmtNum(p.hi,0)} MW`:"");
+ };
+ showP(fc[Math.min(3,fc.length-1)]);
+ document.getElementById("fcWrap").onmousemove=e=>{
+  const r=e.target.closest(".hhit");if(!r)return;
+  showP(pts[+r.dataset.p]);
+ };
+}
+
+async function loadPriceModel(){
+ try{
+  const r=await fetch("api/price-model",{cache:"no-store"});
+  if(!r.ok)return;
+  PM=await r.json();
+ }catch(e){return}
+ renderPriceModel();
+}
+
+function renderPriceModel(){
+ if(!PM)return;
+ document.getElementById("pmPanel").style.display="";
+ if(PM.error==="too_few_rows"){
+  document.getElementById("pmCtx").innerHTML="";
+  document.getElementById("pmWrap").innerHTML="";
+  document.getElementById("pmHeroVal").textContent="–";
+  document.getElementById("pmHeroSub").textContent="";
+  document.getElementById("pmCaption").textContent=t("pmTooFew");
+  return;
+ }
+ const rows=PM.series.map(p=>({...p,t:new Date(p.ts)}));
+ if(!rows.length)return;
+ const vmax=Math.max(...rows.map(r=>Math.max(r.actual,r.predicted)));
+ const W=960,H=230,L=56,R=14,T=18,B=32,PW=W-L-R,PH=H-T-B;
+ const ymax=Math.max(10,Math.ceil(vmax*1.08/500)*500);
+ const y=v=>T+PH-(Math.max(0,v)/ymax)*PH;
+ const bw=PW/rows.length;
+ let svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Price model vs actual">`;
+ const step=ymax<=2000?500:ymax<=6000?1000:2000;
+ for(let v=0;v<=ymax;v+=step){
+  svg+=`<line class="hgrid" x1="${L}" y1="${y(v)}" x2="${W-R}" y2="${y(v)}"/>`;
+  svg+=`<text class="aylbl" x="${L-7}" y="${y(v)+3}" text-anchor="end">${fmtNum(v,0)}</text>`;
+ }
+ rows.forEach((r,i)=>{
+  const x0=L+i*bw;
+  svg+=`<rect class="actbar" x="${(x0+1).toFixed(1)}" y="${y(r.actual).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${(T+PH-y(r.actual)).toFixed(1)}"/>`;
+ });
+ const xC=i=>L+i*bw+bw/2;
+ const dP=rows.map((r,i)=>`${i?"L":"M"} ${xC(i).toFixed(1)} ${y(r.predicted).toFixed(1)}`).join(" ");
+ svg+=`<path class="predline" d="${dP}"/>`;
+ rows.forEach((r,i)=>{svg+=`<circle class="preddot" cx="${xC(i).toFixed(1)}" cy="${y(r.predicted).toFixed(1)}" r="2.5"/>`;});
+ rows.forEach((r,i)=>{
+  if(r.t.getHours()%6===0)svg+=`<text class="axlbl" x="${xC(i).toFixed(1)}" y="${H-14}" text-anchor="middle">${String(r.t.getHours()).padStart(2,"0")}:00</text>`;
+ });
+ rows.forEach((r,i)=>{
+  svg+=`<rect class="hhit" data-i="${i}" x="${(L+i*bw).toFixed(1)}" y="${T}" width="${bw.toFixed(1)}" height="${PH}"/>`;
+ });
+ svg+=`<line class="hgrid" x1="${L}" y1="${T+PH}" x2="${W-R}" y2="${T+PH}" style="stroke:var(--basalt);stroke-width:1.5"/>`;
+ svg+=`</svg>`;
+ document.getElementById("pmWrap").innerHTML=svg;
+ const drivers=(PM.drivers||[]).slice(0,3).map(d=>{
+  const nm=t("f_"+d[0])!=="??"?t("f_"+d[0]):d[0];
+  return `${nm} (${d[1]>0?"+":""}${fmtNum(d[1],1)})`;
+ }).join(" · ");
+ document.getElementById("pmCtx").innerHTML=
+  `<div>${t("pmMae")}: <b>${fmtNum(PM.mae,0)} ${t("priceUnit")}</b></div>`+
+  `<div>${t("pmR2")}: <b>${fmtNum(PM.r2,2)}</b></div>`+
+  (drivers?`<div class="ctx-note">${t("pmDrivers")}: ${drivers}</div>`:"");
+ document.getElementById("pmCaption").innerHTML=
+  `<span style="display:inline-block;width:10px;height:10px;background:var(--chip-bg);border:1px solid var(--line);vertical-align:-1px"></span> ${t("pmActual")} · `+
+  `<span style="color:var(--magma)">—●—</span> ${t("pmPred")}`;
+ const heroVal=document.getElementById("pmHeroVal"),heroSub=document.getElementById("pmHeroSub");
+ const hh=n=>String(n).padStart(2,"0")+":00";
+ const showBar=i=>{
+  const r=rows[i];
+  heroVal.textContent=fmtNum(r.actual,0)+" "+t("priceUnit");
+  heroSub.innerHTML=`${t("pmActual")} (${fmtDate(r.t,{day:"numeric",month:"short"})}, ${(LANG==="is"?"kl. ":"")+hh(r.t.getHours())}) <span class="stns">· ${t("pmPred")}: ${fmtNum(r.predicted,0)}</span>`;
+ };
+ showBar(rows.length-1);
+ document.getElementById("pmWrap").onmousemove=e=>{
+  const r=e.target.closest(".hhit");if(!r)return;
+  showBar(+r.dataset.i);
+ };
+}
+
+loadForecast();loadPriceModel();
+setInterval(()=>{loadForecast();loadPriceModel();},15*60*1000);
+onLangChange(()=>{renderForecast();renderPriceModel();applyLang();});
+</script>
+</body>
+</html>

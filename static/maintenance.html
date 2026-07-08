@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morse — Viðhald · Skýr skilaboð</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="topbar">
+    <div class="access" id="accessBar" style="display:none">
+      <span class="mode" id="accessMode">…</span>
+      <span class="msg" id="accessMsg"></span>
+      <span id="loginBox" style="display:none">
+        <input type="password" id="pw" placeholder="aðgangsorð">
+        <button id="loginBtn">Opna rauntíma</button>
+        <span class="err" id="loginErr"></span>
+      </span>
+      <button id="logoutBtn" class="lgout" style="display:none">Útskrá</button>
+    </div>
+    <div class="langsw"><button id="langIS" title="Íslenska">🇮🇸</button><button id="langEN" title="English">🇬🇧</button></div>
+  </div>
+  <div class="eyebrow" data-i18n="eyebrow"></div>
+  <h1><div class="logo-main" id="mt1">MORSE</div><div class="logo-sub" id="mt2">SKÝR SKILABOÐ</div></h1>
+  <div class="src"><span data-i18n="src1"></span> <b id="stamp">…</b> <span data-i18n="src2"></span></div>
+  <nav class="mainnav"><a href="./" data-i18n="navLive"></a><a href="forecast.html" data-i18n="navForecast"></a><a href="maintenance.html" data-i18n="navMaint" class="on"></a></nav>
+</header>
+
+<section class="h48">
+  <div class="metric-row">
+    <div class="hero">
+      <div class="val" id="h48HeroVal">–</div>
+      <div class="sub" id="h48HeroSub"></div>
+    </div>
+    <div class="ctx" id="h48Ctx"></div>
+  </div>
+  <div class="chart-wrap" id="chartWrap"></div>
+  <div class="eyebrow belowchart"><span data-i18n="hourly1"></span> <span id="h48from"></span><span data-i18n="hourly2"></span></div>
+</section>
+
+<section class="now">
+  <div class="now-head">
+    <div class="readout">
+      <div class="lbl" data-i18n="dayPanelLbl"></div>
+      <div class="big"><span id="mwOut">0</span><small> MW</small></div>
+      <div class="sub" id="mwSub"></div>
+    </div>
+    <div class="scrub">
+      <div class="lbl" style="font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steam)" data-i18n="pickDay"></div>
+      <div class="date" id="dateLbl"></div>
+      <div class="sliderline">
+        <button class="stepbtn" id="dayPrev" data-i18n="prevDay"></button>
+        <input type="range" id="daySlider" min="0" max="178" value="0" aria-label="Select date">
+        <button class="stepbtn" id="dayNext" data-i18n="nextDay"></button>
+      </div>
+      <div class="ends"><span id="endL"></span><span id="endR"></span></div>
+    </div>
+  </div>
+
+  <div class="band-lbl"><span data-i18n="installed"></span><span id="bandPct"></span></div>
+  <div class="band" id="band" role="img" aria-label="Share of national installed capacity offline"></div>
+  <div class="band-legend" id="bandLegend"></div>
+</section>
+
+<div class="filters" id="filters">
+  <span class="flbl" data-i18n="showLbl"></span>
+  <button class="fbtn on" data-f="all" data-i18n="fAll"></button>
+  <button class="fbtn" data-f="gen" data-i18n="fGen"></button>
+  <button class="fbtn" data-f="grid" data-i18n="fGrid"></button>
+  <button class="fbtn" data-f="test" data-i18n="fTest"></button>
+  <span class="flbl" style="margin-left:12px" data-i18n="coLbl"></span>
+  <button class="fbtn on" data-c="all" data-i18n="fAllCo"></button>
+  <button class="fbtn" data-c="LV">LV</button>
+  <button class="fbtn" data-c="LN">LN</button>
+  <button class="fbtn" data-c="ON">ON</button>
+  <button class="fbtn" data-c="HSO">HS Orka</button>
+  <span class="count" id="count"></span>
+</div>
+
+<div class="list" id="list"></div>
+
+<div class="foot" id="bigFoot"></div>
+
+</div>
+<script src="shared.js"></script>
+<script>
+/* ---------------- data ---------------- */
+const NAMES={SUL:"Sultartangi",KRA:"Krafla",VAF:"Vatnsfell",SVA:"Svartsengi",VM5:"Vestm.–strengur 5",VM4:"Vestm.–strengur 4",FL4:"Fljótsdalslína 4",TO1:"Þorlákshafnarlína 1",NE1:"Nesjavallalína 1",HEL:"Hellisheiði",HAM:"Hamranes",BUR:"Búrfell",LJO:"Ljósafoss",REY:"Reykjanes",STU:"Stuðlar",SIG:"Sigalda",SI3:"Sigöldulína 3",BOL:"Bolungarvík",DAL:"Dalvík",KOP:"Kópasker",VEM:"Vestmannaeyjar",VOG:"Vogaskeið",RIM:"Rimakot",GEH:"Geitháls",VP1:"Vopnafjarðarlína 1",BAK:"Bakki",LF1:"Lagarfosslína 1",NES:"Nesjavellir",HO1:"Hólalína 1",MJ1:"Mjólkárlína 1",GE1:"Geiradalslína 1",BLA:"Blanda",HRA:"Hrauneyjafoss",VAT:"Vatnshamrar",BD1:"Breiðadalslína 1"};
+const STATION_CAP={SUL:120,KRA:60,VAF:90,SVA:75,HEL:303,BUR:270,SIG:150,LJO:15,REY:100,NES:120,BLA:150,HRA:210};
+/* cat: unit | station | xfmr | grid | dist | test | trial */
+const FALLBACK=[
+ {k:"SUL",t:"SUL_V2 Víkkun aðrennslisgangna",s:"2026-03-24T08:00",e:"2026-10-09T16:00",sys:"V",co:"LV",st:"live",cat:"unit",mw:60},
+ {k:"SUL",t:"SUL_V1 Víkkun aðrennslisgangna",s:"2026-03-24T08:00",e:"2026-10-09T16:00",sys:"V",co:"LV",st:"live",cat:"unit",mw:60},
+ {k:"KRA",t:"Úttekt á vél nr.1 í KRA vegna stjórnkerfisútskipta",s:"2026-05-02T10:00",e:"2026-07-10T12:00",sys:"V",co:"LV",st:"live",cat:"unit",mw:30},
+ {k:"KRA",t:"Úttekt á vél nr.2 í KRA vegna stjórnkerfisútskipta",s:"2026-05-03T10:00",e:"2026-09-14T09:00",sys:"V",co:"LV",st:"live",cat:"unit",mw:30},
+ {k:"KRA",t:"KRA 132 kV — Endurnýjun stjórn- og varnarbúnaðar",s:"2026-05-11T08:00",e:"2026-07-10T18:00",sys:"F",co:"LN",st:"live",cat:"grid"},
+ {k:"VAF",t:"VAF_V1 Ástandsskoðun",s:"2026-05-11T13:00",e:"2026-08-04T08:00",sys:"V",co:"LV",st:"live",cat:"unit",mw:45},
+ {k:"VAF",t:"VAF_V2 Ástandsskoðun",s:"2026-05-11T13:00",e:"2026-07-23T12:00",sys:"V",co:"LV",st:"live",cat:"unit",mw:45},
+ {k:"VAF",t:"VAF_Lón tómt — vinna Þórislokur",s:"2026-05-13T08:00",e:"2026-07-10T16:00",sys:"V",co:"LV",st:"live",cat:"station",mw:90},
+ {k:"SUL",t:"SUL_SP2 Ástandsskoðun",s:"2026-05-19T13:00",e:"2026-08-04T09:00",sys:"B",co:"LN+LV",st:"live",cat:"xfmr"},
+ {k:"SVA",t:"SVA1 (SVAE) Upptekt",s:"2026-05-31T14:00",e:"2026-07-10T16:00",sys:"V",co:"HSO",st:"live",cat:"unit",mw:30,est:1},
+ {k:"VM5",t:"VM5: Vinna við þveranir á hafsbotni",s:"2026-06-09T09:00",e:"2026-07-10T16:00",sys:"F",co:"LN",st:"live",cat:"grid"},
+ {k:"VM4",t:"VM4: Vinna við þveranir á hafsbotni",s:"2026-06-10T09:00",e:"2026-07-10T16:00",sys:"F",co:"LN",st:"live",cat:"grid"},
+ {k:"SUL",t:"SUL SU2 úr rekstri",s:"2026-06-22T10:00",e:"2026-07-10T12:00",sys:"F",co:"LN",st:"live",cat:"grid"},
+ {k:"FL4",t:"FL4 úr rekstri vegna vinnu undir línu",s:"2026-06-25T08:00",e:"2026-07-06T17:00",sys:"F",co:"LN",st:"live",cat:"grid"},
+ {k:"TO1",t:"TO1: Þverun jarðstrengs TO2 við tengivirki TOR",s:"2026-07-01T00:00",e:"2026-07-17T00:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"VAF",t:"VAF_SP2 Ástandsskoðun",s:"2026-07-01T13:00",e:"2026-07-07T16:00",sys:"B",co:"LN+LV",st:"live",cat:"xfmr"},
+ {k:"NE1",t:"NE1 úr rekstri vegna jarðvinnu",s:"2026-07-02T08:30",e:"2026-07-23T16:30",sys:"F",co:"LN",st:"live",cat:"grid"},
+ {k:"HEL",t:"HEL vélar 3 og 4 — endurnýja gegnumtök spennis",s:"2026-07-02T09:00",e:"2026-07-22T15:00",sys:"V",co:"ON",st:"live",cat:"unit",mw:90,note:"2 × 45 MW units"},
+ {k:"TO1",t:"TO1: Vinna undir línu við Þrengslaveg",s:"2026-07-02T10:00",e:"2026-07-17T00:00",sys:"F",co:"LN",st:"done",cat:"grid"},
+ {k:"HAM",t:"FH1 úr rekstri að beiðni Furu",s:"2026-07-02T11:00",e:"2026-07-09T11:00",sys:"F",co:"LN",st:"done",cat:"grid"},
+ {k:"SVA",t:"SVA3 (OV6): Vikustopp",s:"2026-07-05T14:00",e:"2026-07-10T16:00",sys:"V",co:"HSO",st:"prep",cat:"unit",mw:35,est:1},
+ {k:"BUR",t:"BUR1 V5 — Vinna við vélaspenni",s:"2026-07-06T08:00",e:"2026-07-08T16:00",sys:"V",co:"LV",st:"prep",cat:"unit",mw:45},
+ {k:"BUR",t:"BUR1 V6 — Vinna við vélaspenni",s:"2026-07-06T08:00",e:"2026-07-08T16:00",sys:"V",co:"LV",st:"prep",cat:"unit",mw:45},
+ {k:"BUR",t:"BUR1 VSP3",s:"2026-07-06T08:00",e:"2026-07-08T16:00",sys:"V",co:"LV",st:"prep",cat:"xfmr"},
+ {k:"KRA",t:"KRA_SP2 úttekt v. viðhalds",s:"2026-07-06T10:00",e:"2026-08-28T09:00",sys:"B",co:"LN+LV",st:"live",cat:"xfmr"},
+ {k:"KRA",t:"KRA — Færsla á 11 kV tengingu milli LV og LN",s:"2026-07-06T13:00",e:"2026-07-13T13:00",sys:"D",co:"LV",st:"prep",cat:"dist"},
+ {k:"FL4",t:"FL4 — Færsla",s:"2026-07-07T08:00",e:"2026-07-10T18:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"LJO",t:"LJO V2 — Rafali og kolahreinsun",s:"2026-07-07T08:00",e:"2026-07-07T17:00",sys:"V",co:"LV",st:"prep",cat:"unit",mw:4,est:1},
+ {k:"SVA",t:"SVAF (OV6): Lokafrágangur á GIS felti",s:"2026-07-07T10:00",e:"2026-07-10T15:00",sys:"V",co:"HSO",st:"prep",cat:"xfmr"},
+ {k:"KRA",t:"KRA — uppsetning spennuspennis á hringtein",s:"2026-07-07T10:00",e:"2026-07-08T17:00",sys:"F",co:"LN",st:"prepdone",cat:"grid"},
+ {k:"REY",t:"REY SP4 vélaspennir — úttekt",s:"2026-07-07T15:00",e:"2026-07-10T15:00",sys:"V",co:"HSO",st:"prep",cat:"unit",mw:50,est:1,note:"unit transformer — likely takes one 50 MW turbine out"},
+ {k:"KRA",t:"KRA 11 kV teinn úr rekstri vegna ástandsskoðunar",s:"2026-07-09T10:00",e:"2026-07-09T14:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"KRA",t:"Prófunarrekstur á vél nr.1 í KRA (stjórnkerfisútskipti)",s:"2026-07-10T12:00",e:"2026-07-20T12:00",sys:"V",co:"LV",st:"prep",cat:"trial"},
+ {k:"STU",t:"STU — Endurnýjun jarðvegsyfirborðs",s:"2026-07-13T13:00",e:"2026-07-24T16:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"SIG",t:"SIG_Krókslón tæming — stækkun SIG",s:"2026-07-20T08:00",e:"2026-09-07T16:00",sys:"V",co:"LV",st:"prepdone",cat:"station",mw:150,note:"reservoir drained — whole station"},
+ {k:"SIG",t:"SIG_V2 Ástandsskoðun — 12 ára",s:"2026-07-20T08:00",e:"2026-09-07T17:00",sys:"V",co:"LV",st:"prep",cat:"unit",mw:50},
+ {k:"SI3",t:"FER: SI3 — tenging í FER",s:"2026-07-20T08:00",e:"2026-08-11T16:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"KRA",t:"Úttekt á vél nr.1 í KRA (stjórnkerfisútskipti, síðari)",s:"2026-07-20T12:00",e:"2026-08-07T12:00",sys:"V",co:"LV",st:"prep",cat:"unit",mw:30},
+ {k:"SIG",t:"SIG_V3 Ástandsskoðun — 12 ára",s:"2026-07-21T08:00",e:"2026-09-07T17:00",sys:"V",co:"LV",st:"prep",cat:"unit",mw:50},
+ {k:"SIG",t:"SIG_V1 Ástandsskoðun — 12 ára",s:"2026-07-23T08:00",e:"2026-09-06T17:00",sys:"V",co:"LV",st:"prep",cat:"unit",mw:50},
+ {k:"VAF",t:"VAF_V2 Prófanir á gangráð",s:"2026-07-23T12:00",e:"2026-07-30T16:00",sys:"V",co:"LV",st:"prep",cat:"unit",mw:45},
+ {k:"KRA",t:"KRA — KR1",s:"2026-07-29T09:00",e:"2026-08-07T16:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"VAF",t:"VAF_V1 Prófanir á gangráð",s:"2026-08-04T08:00",e:"2026-08-11T17:00",sys:"V",co:"LV",st:"prep",cat:"unit",mw:45},
+ {k:"RIM",t:"RIM SP1 úr rekstri v. spennaskipta",s:"2026-08-04T10:00",e:"2026-08-21T15:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"SUL",t:"SP1 úr rekstri — útskipti á sprengidiskum",s:"2026-08-04T12:00",e:"2026-08-18T12:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"KRA",t:"Prófunarrekstur á vél nr.1 í KRA (síðari)",s:"2026-08-07T12:00",e:"2026-08-26T12:00",sys:"V",co:"LV",st:"prep",cat:"trial"},
+ {k:"GEH",t:"GEH HN1 220 kV aflrofi SF6 — viðgerð",s:"2026-08-10T08:00",e:"2026-08-14T16:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"VP1",t:"VP1 — endurnýjun á upphengibúnaði",s:"2026-08-10T09:00",e:"2026-08-19T14:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"SIG",t:"SIG — búnaður fyrir SP4 og mælaspennar teina teknir niður",s:"2026-08-11T10:00",e:"2026-08-14T12:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"BAK",t:"BAK SP1 — spennaskoðun og mælingar",s:"2026-08-17T09:00",e:"2026-08-20T17:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"SIG",t:"SIG_SP2 Ástandsskoðun",s:"2026-08-17T09:00",e:"2026-08-24T16:00",sys:"B",co:"LN+LV",st:"prep",cat:"xfmr"},
+ {k:"BAK",t:"BAK SP2 — spennaskoðun og mælingar",s:"2026-08-24T09:00",e:"2026-08-27T17:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"SIG",t:"SIG_SP3 Ástandsskoðun",s:"2026-08-25T09:00",e:"2026-08-31T16:00",sys:"B",co:"LN+LV",st:"prep",cat:"xfmr"},
+ {k:"LF1",t:"LF1 — breyting á línu vegna hækkunar á vegi",s:"2026-08-26T09:00",e:"2026-08-27T23:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"SIG",t:"SIG_SP1 Ástandsskoðun",s:"2026-09-01T09:00",e:"2026-09-06T16:00",sys:"B",co:"LN+LV",st:"prep",cat:"xfmr"},
+ {k:"NES",t:"NES vél 2 — IEC 61859 endurbætur",s:"2026-09-07T09:00",e:"2026-09-10T15:00",sys:"V",co:"ON",st:"prep",cat:"unit",mw:30},
+ {k:"HO1",t:"HO1 — endurnýjun upphengibúnaðar",s:"2026-09-08T08:15",e:"2026-09-17T18:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"NES",t:"NES vél 1 — upptekt",s:"2026-09-21T09:00",e:"2026-10-26T15:00",sys:"V",co:"ON",st:"prep",cat:"unit",mw:30},
+ {k:"NES",t:"NES vél 1 — houseload próf",s:"2026-09-21T13:00",e:"2026-09-21T14:00",sys:"V",co:"ON",st:"prep",cat:"trial"},
+ {k:"MJ1",t:"MJ1 — endurnýjun upphengibúnaðar",s:"2026-09-22T08:00",e:"2026-10-01T18:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"NES",t:"NES — allsherjarstopp",s:"2026-09-22T09:00",e:"2026-10-11T15:00",sys:"V",co:"ON",st:"prep",cat:"station",mw:120,note:"full plant stop"},
+ {k:"GE1",t:"GE1 — útskipti á upphengibúnaði",s:"2026-10-06T08:30",e:"2026-10-09T18:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"BLA",t:"BLA vél 1 — 12 ára skoðun á vél og spenni",s:"2026-11-14T08:00",e:"2026-11-22T18:00",sys:"V",co:"LV",st:"prep",cat:"unit",mw:50},
+ {k:"HRA",t:"HRA V2 — frávatn, vinna við árvatnslagnir",s:"2027-04-12T08:00",e:"2027-04-16T17:00",sys:"V",co:"LV",st:"prep",cat:"unit",mw:70},
+ {k:"HRA",t:"HRA frávatn — aflstöð úr rekstri",s:"2027-04-12T08:00",e:"2027-04-15T17:00",sys:"V",co:"LV",st:"prepdone",cat:"station",mw:210},
+ {k:"VAT",t:"VE1 á framhjáhlaup vegna vinnu við skilrofa",s:"2035-01-01T10:00",e:"2035-01-01T12:00",sys:"F",co:"LN",st:"prep",cat:"grid"},
+ {k:"BD1",t:"BD1 — fullnaðarviðgerð, upprak í Kjaransstaðadal",s:"2035-02-03T10:00",e:"2035-02-04T16:00",sys:"F",co:"LN",st:"prep",cat:"grid"}
+];
+/* monthly backup-generator test runs (1 h, Landsnet) */
+const TEST_DATES=["2026-07-31","2026-08-28","2026-09-25","2026-10-30","2026-11-27","2026-12-30"];
+["BOL","DAL","KOP","VEM","VOG"].forEach(k=>TEST_DATES.forEach(d=>FALLBACK.push(
+ {k,t:(k==="BOL"?"BOL Prufukeyrsla varaaflsvéla":"FAR "+k+": Prufukeyrsla varaaflsvéla"),s:d+"T11:00",e:d+"T12:00",sys:"F",co:"LN",st:"prepdone",cat:"test"}
+)));
+
+/* ---------------- classification of fetched records ---------------- */
+const UNIT_CAP={SUL:60,KRA:30,VAF:45,SVA:30,HEL:45,BUR:45,SIG:50,LJO:4,REY:50,NES:30,BLA:50,HRA:70,KAR:115,STE:9};
+const EST_STATIONS=new Set(["SVA","LJO","REY","STE"]);
+function classify(k,title,sysStr){
+ const t=title.toLowerCase();
+ if(/prufukeyrsla/.test(t))return{cat:"test"};
+ if(/prófunarrekstur|profunarrekstur|houseload/.test(t))return{cat:"trial"};
+ if(sysStr==="D")return{cat:"dist"};
+ if(!/[VB]/.test(sysStr))return{cat:"grid"};
+ if(/allsherjarstopp|lón tóm|lon tom|tæming|taeming|aflstöð úr rekstri|aflstod ur rekstri/.test(t))
+  return{cat:"station",mw:STATION_CAP[k]||null,est:!(k in STATION_CAP)};
+ const unitXfmr=/vélaspenni|velaspenni/.test(t);
+ if(!unitXfmr && /(^|[^a-z])sp\d|vsp\d|spennuspenn|spennaskoðun|spennaskodun|\bgis\b|teinn|aflrofi|skilrofa|mælaspenn|maelaspenn|hringtein/.test(t))
+  return{cat:"xfmr"};
+ if(/ov6/.test(t))return{cat:"unit",mw:35,est:true};
+ let n=(title.match(/(?:^|[^A-Za-z0-9])V[1-6]\b/g)||[]).length;
+ (t.match(/vél(?:ar)?(?:\s*nr\.?)?\s*\d(?:\s*og\s*\d)*/g)||[]).forEach(m=>{n+=(m.match(/\d/g)||[]).length});
+ if(n===0&&/(sva1|svae|upptekt|vikustopp|rafali|vélaspenni|velaspenni)/.test(t))n=1;
+ if(n===0)return{cat:"unit",mw:null,est:true,note:"generation work — unit not identified"};
+ const cap=UNIT_CAP[k];
+ return{cat:"unit",mw:cap?cap*n:null,est:EST_STATIONS.has(k)||!cap};
+}
+const SYS_LETTER=names=>{
+ const v=names.some(n=>/vinnslu/i.test(n)),f=names.some(n=>/flutnings/i.test(n)),d=names.some(n=>/dreifi/i.test(n));
+ return (v&&f)?"B":v?"V":d?"D":"F";
+};
+const ST_KEY={"Hafin":"live","Í undirbúningi":"prep","Undirbúningi lokið":"prepdone","Lokið":"done"};
+function mapRaw(op){
+ if(!op||!op.start||!op.end)return null;
+ const k=(op.kks&&op.kks[0])||"?";
+ const sys=SYS_LETTER(op.sys||[]);
+ const cls=classify(k,op.title||"",sys);
+ if(op.kksName&&!NAMES[k])NAMES[k]=op.kksName;
+ return Object.assign({k,t:op.title,s:op.start.slice(0,16),e:op.end.slice(0,16),sys,
+  co:(op.co||[]).join("+"),st:ST_KEY[(op.status||[])[0]]||"prep"},cls);
+}
+
+/* ---------------- data loading ---------------- */
+let D=[];
+async function boot(){
+ const stamp=document.getElementById("stamp");
+ try{
+  const r=await fetch("data.json",{cache:"no-store"});
+  if(r.status===404){D=[];document.getElementById("stamp").textContent=t("stampNoPublic");initTime();renderList();return;}
+  if(!r.ok)throw new Error(r.status);
+  const j=await r.json();
+  D=j.operations.map(mapRaw).filter(Boolean);
+  if(D.length<10)throw new Error("too few records");
+  const sentEnd=LANG==="is"?".":" ·";
+  stamp.textContent=(j.delayed?t("stampDelayed"):"")+t("stampFetched")+" "+fmtDate(new Date(j.fetchedAt),{day:"numeric",month:"long",year:"numeric",hour:true})+sentEnd;
+ }catch(e){
+  D=FALLBACK.slice();
+  stamp.textContent=t("stampFallback");
+ }
+ D.sort((a,b)=>a.s.localeCompare(b.s));
+ initTime();
+ renderList();
+}
+
+/* ---------------- helpers ---------------- */
+const TOTAL_CAP=3060;
+const ST_CLS={live:"live",done:"done"};
+const fmtD=iso=>{const d=new Date(iso);return fmtDate(d,{day:"2-digit",month:"short",year:"numeric"})+" "+iso.slice(11,16)};
+const durTxt=(s,e)=>{const ms=new Date(e)-new Date(s),h=ms/36e5;if(h<48)return Math.round(h)+" "+t("u_h");const d=h/24;if(d<62)return Math.round(d)+" "+t("u_days");return (d/30.44).toFixed(1)+" "+t("u_months")};
+
+/* de-duplicated MW total for a given moment */
+function mwAt(t){
+ const byStation={};
+ D.forEach(o=>{
+  if(o.cat!=="unit"&&o.cat!=="station")return;
+  if(o.mw==null)return;
+  if(new Date(o.s)<=t&&t<new Date(o.e)){
+   const b=byStation[o.k]||(byStation[o.k]={units:0,station:0});
+   if(o.cat==="station")b.station=Math.max(b.station,o.mw);
+   else b.units+=o.mw;
+  }
+ });
+ const parts=[];let sum=0;
+ for(const k in byStation){
+  const b=byStation[k],cap=STATION_CAP[k]||1e9;
+  const v=Math.min(cap,Math.max(b.station,Math.min(b.units,cap)));
+  if(v>0){parts.push({k,v});sum+=v}
+ }
+ parts.sort((a,b)=>b.v-a.v);
+ return{sum,parts};
+}
+
+/* ---------------- render: band + readout ---------------- */
+const band=document.getElementById("band"),legend=document.getElementById("bandLegend");
+const slider=document.getElementById("daySlider");
+let T0=new Date("2026-07-06T12:00:00");
+function initTime(){
+ const today=new Date();today.setHours(12,0,0,0);
+ const dMin=D.length?new Date(D[0].s):today;
+ T0=today>=dMin?today:dMin;
+ const fmt=d=>fmtDate(d,{day:"2-digit",month:"short",year:"numeric"});
+ document.getElementById("endL").textContent=fmt(T0);
+ document.getElementById("endR").textContent=fmt(new Date(T0.getTime()+178*864e5));
+ slider.value=0;
+}
+function renderDay(){
+ const t0d=new Date(T0.getTime()+slider.value*864e5);
+ prevBtn.disabled=+slider.value<=+slider.min;
+ nextBtn.disabled=+slider.value>=+slider.max;
+ document.getElementById("dateLbl").textContent=fmtDate(t0d,{weekday:"short",day:"2-digit",month:"short",year:"numeric"});
+ const{sum,parts}=mwAt(t0d);
+ document.getElementById("mwOut").textContent=fmtNum(sum,0);
+ document.getElementById("mwSub").textContent=parts.length?parts.length+" "+(parts.length>1?t("stationsAffected"):t("stationAffected1")):t("noGenSched");
+ document.getElementById("bandPct").textContent=t("offlinePct")+": "+fmtNum(100*sum/TOTAL_CAP,1)+"% ("+t("estWord")+")";
+ band.innerHTML="";let x=0;
+ parts.forEach(p=>{
+  const w=100*p.v/TOTAL_CAP;
+  const s=document.createElement("div");s.className="seg";
+  s.style.left=x+"%";s.style.width=w+"%";
+  s.title=(NAMES[p.k]||p.k)+" — "+p.v+" MW offline";
+  band.appendChild(s);x+=w;
+ });
+ legend.innerHTML=parts.length
+  ? parts.map(p=>`<span class="chip">${NAMES[p.k]||p.k} <b>−${p.v} MW</b></span>`).join("")
+  : `<span class="chip none">${t("allInService")}</span>`;
+ const dayStart=new Date(t0d);dayStart.setHours(0,0,0,0);
+ renderDayChart(dayStart);
+ highlight(t0d);
+}
+slider.addEventListener("input",renderDay);
+const prevBtn=document.getElementById("dayPrev"),nextBtn=document.getElementById("dayNext");
+function stepDay(d){
+ slider.value=Math.min(+slider.max,Math.max(+slider.min,+slider.value+d));
+ renderDay();
+}
+prevBtn.addEventListener("click",()=>stepDay(-1));
+nextBtn.addEventListener("click",()=>stepDay(1));
+
+/* ---------------- render: list ---------------- */
+let fType="all",fCo="all";
+const list=document.getElementById("list");
+function mwCell(o){
+ if(o.cat==="unit"||o.cat==="station"){
+  if(o.mw==null)return `<div class="val zero">${t("mwUnknown")}</div><span class="why">${t("unknownWhy")}</span>`;
+  return `<div class="val out">−${o.mw} MW</div>
+   ${o.est?`<span class="est">${t("estLabel")}</span>`:""}
+   <span class="why">${o.cat==="station"?t("stationOff"):t("unitOff")}${o.note?" — "+o.note:""}</span>
+   ${STATION_CAP[o.k]?`<div class="cap">${t("stationTotal")} ${STATION_CAP[o.k]} MW</div>`:""}`;
+ }
+ return `<div class="val zero">0 MW</div><span class="why">${t("why_"+o.cat)}</span>`;
+}
+function renderList(){
+ list.innerHTML=D.map((o,i)=>{
+  const gen=o.cat==="unit"||o.cat==="station";
+  const grp=gen?"gen":(o.cat==="test"||o.cat==="trial")?"test":"grid";
+  if(fType!=="all"&&grp!==fType)return"";
+  if(fCo!=="all"&&!o.co.includes(fCo))return"";
+  
+  return `<div class="row" data-i="${i}">
+   <div class="kks"><span class="code">${o.k}</span><span class="nm">${NAMES[o.k]||""}</span></div>
+   <div class="mid">
+     <div class="t">${o.t}</div>
+     <div class="when"><b>${fmtD(o.s)}</b> → <b>${fmtD(o.e)}</b> · ${durTxt(o.s,o.e)}</div>
+     <div class="tags">
+       <span class="tag">${t("sys_"+o.sys)}</span>
+       <span class="tag">${o.co.replace("HSO","HS Orka")}</span>
+       <span class="tag ${ST_CLS[o.st]||""}">${t("st_"+o.st)}</span>
+     </div>
+   </div>
+   <div class="mw">${mwCell(o)}</div>
+  </div>`;
+ }).join("");
+ const n=list.querySelectorAll(".row").length;
+ document.getElementById("count").textContent=n+" "+t("ofWord")+" "+D.length+" "+t("entriesWord");
+ renderDay();
+}
+function highlight(when){
+ list.querySelectorAll(".row").forEach(r=>{
+  const o=D[+r.dataset.i];
+  const active=new Date(o.s)<=when&&when<new Date(o.e);
+  r.classList.toggle("dim",!active&&new Date(o.e)<when);
+ });
+}
+document.getElementById("filters").addEventListener("click",e=>{
+ const b=e.target.closest(".fbtn");if(!b)return;
+ if(b.dataset.f){fType=b.dataset.f;b.parentNode.querySelectorAll("[data-f]").forEach(x=>x.classList.toggle("on",x===b));}
+ if(b.dataset.c){fCo=b.dataset.c;b.parentNode.querySelectorAll("[data-c]").forEach(x=>x.classList.toggle("on",x===b));}
+ renderList();
+});
+boot();
+
+/* ---------------- render: hourly line for the selected day ---------------- */
+function renderDayChart(dayStart){
+ document.getElementById("h48from").textContent=fmtDate(dayStart,{weekday:"long",day:"2-digit",month:"long",year:"numeric"});
+ const hours=[];
+ for(let i=0;i<24;i++){
+  const t0=new Date(dayStart.getTime()+i*36e5);
+  const r=mwAt(new Date(t0.getTime()+18e5)); // sample mid-hour
+  hours.push({t:t0,sum:r.sum,parts:r.parts});
+ }
+ const vals=hours.map(h=>h.sum);
+ const vmax=Math.max(...vals),vmin=Math.min(...vals);
+ const ymin=Math.max(0,Math.floor((vmin-20)/10)*10);          /* lowest value - 20 MW, never below 0 */
+ const ymax=Math.max(ymin+40,Math.ceil((vmax+20)/10)*10);
+ const range=ymax-ymin;
+ const step=[10,20,25,50,100,200].find(s=>range/s<=6)||200;
+ const W=960,H=230,L=52,R=14,T=18,B=32,PW=W-L-R,PH=H-T-B;
+ const x=i=>L+(i/23)*PW;
+ const y=v=>T+PH-((v-ymin)/range)*PH;
+ let svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hourly MW offline for the selected day">`;
+ for(let v=Math.ceil(ymin/step)*step;v<=ymax;v+=step){
+  svg+=`<line class="hgrid" x1="${L}" y1="${y(v)}" x2="${W-R}" y2="${y(v)}"/>`;
+  svg+=`<text class="aylbl" x="${L-7}" y="${y(v)+3}" text-anchor="end">${v}</text>`;
+ }
+ for(let i=0;i<24;i+=3)svg+=`<text class="axlbl" x="${x(i)}" y="${H-14}" text-anchor="middle">${String(i).padStart(2,"0")}:00</text>`;
+ /* step line + soft area */
+ let dLine=`M ${x(0)} ${y(vals[0])}`;
+ for(let i=1;i<24;i++)dLine+=` L ${x(i)} ${y(vals[i-1])} L ${x(i)} ${y(vals[i])}`;
+ dLine+=` L ${W-R} ${y(vals[23])}`;
+ svg+=`<path class="larea" d="${dLine} L ${W-R} ${T+PH} L ${L} ${T+PH} Z"/>`;
+ svg+=`<path class="lpath" d="${dLine}"/>`;
+ svg+=`<circle class="hdot" id="hdot" r="5" cx="${x(0)}" cy="${y(vals[0])}" style="display:none"/>`;
+ for(let i=0;i<24;i++){
+  const x0=i===0?L:(x(i-1)+x(i))/2, x1=i===23?W-R:(x(i)+x(i+1))/2;
+  svg+=`<rect class="hhit" data-h="${i}" x="${x0}" y="${T}" width="${x1-x0}" height="${PH}"/>`;
+ }
+ svg+=`<line class="hgrid" x1="${L}" y1="${T+PH}" x2="${W-R}" y2="${T+PH}" style="stroke:var(--basalt);stroke-width:1.5"/>`;
+ svg+=`</svg>`;
+ document.getElementById("chartWrap").innerHTML=svg;
+ const pk=hours.reduce((a,b)=>b.sum>a.sum?b:a,hours[0]);
+ const hh=n=>String(n).padStart(2,"0")+":00";
+ const heroVal=document.getElementById("h48HeroVal"),heroSub=document.getElementById("h48HeroSub");
+ document.getElementById("h48Ctx").innerHTML=
+  `<div>${t("dayLow")}: <b>${fmtNum(vmin,0)} MW</b></div>`+
+  `<div>${t("peakWord")}: <b>${fmtNum(vmax,0)} MW</b> ${t("atWord")} ${hh(pk.t.getHours())}</div>`+
+  `<div class="ctx-note">${t("yaxis")} ${fmtNum(ymin,0)}–${fmtNum(ymax,0)} MW · ${t("estWord")}</div>`;
+ const showHour=i=>{
+  const h=hours[i];
+  const dot=document.getElementById("hdot");
+  dot.style.display="";dot.setAttribute("cx",x(i));dot.setAttribute("cy",y(h.sum));
+  heroVal.textContent=fmtNum(h.sum,0)+" MW";
+  const range=(LANG==="is"?"kl. ":"")+hh(h.t.getHours())+"–"+hh((h.t.getHours()+1)%24);
+  heroSub.innerHTML=`${range} <span class="stns">· ${h.parts.length?h.parts.map(p=>(NAMES[p.k]||p.k)+" −"+p.v).join(", "):t("noGenOut")}</span>`;
+ };
+ showHour(hours.indexOf(pk));   // default: the day's peak hour
+ document.getElementById("chartWrap").onmousemove=e=>{
+  const r=e.target.closest(".hhit");if(!r)return;
+  showHour(+r.dataset.h);
+ };
+}
+onLangChange(()=>renderList());
+</script>
+</body>
+</html>
