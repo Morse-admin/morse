@@ -33,6 +33,7 @@ from .db import init_db, pool
 from .landsnet import poll_measurements, store_reading, parse_payload
 from .orkugatt import crawl_orkugatt
 from .notifications import parse_notifications, store_notifications, poll_notifications
+from .prices import parse_prices, store_prices
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 log = logging.getLogger("main")
@@ -162,6 +163,20 @@ async def ingest_notifications(request: Request):
     return {"ok": True, **result}
 
 
+@app.post("/api/ingest-prices")
+async def ingest_prices(request: Request):
+    if not INGEST_TOKEN:
+        return JSONResponse({"error": "server has no INGEST_TOKEN set"}, status_code=503)
+    if request.headers.get("x-ingest-token", "") != INGEST_TOKEN:
+        return JSONResponse({"error": "bad token"}, status_code=401)
+    body = (await request.body()).decode("utf-8", errors="replace")
+    items = parse_prices(body)
+    if not items:
+        return JSONResponse({"error": "no price rows found in payload"}, status_code=400)
+    result = await store_prices(items)
+    return {"ok": True, **result}
+
+
 # ------------------------------------------------------- data (gated) ----
 @app.post("/api/admin/reextract-snid")
 async def reextract_snid(request: Request):
@@ -255,6 +270,20 @@ async def notifications(request: Request, days: int = Query(30, ge=1, le=365)):
         {"id": str(r[0]), "ts": r[1].isoformat(), "short": r[2], "long": r[3],
          "first_seen": r[4].isoformat(),
          "publish_lag_min": round((r[4] - r[1]).total_seconds() / 60)} for r in rows]}
+
+
+@app.get("/api/prices")
+async def prices(request: Request, days: int = Query(3, ge=1, le=90)):
+    cut = cutoff_for(request)
+    end = cut or datetime.now(timezone.utc)
+    start = end - timedelta(days=days)
+    async with pool.connection() as conn:
+        cur = await conn.execute(
+            """SELECT ts, price_kr_mwh FROM balancing_prices
+               WHERE ts > %s AND ts <= %s ORDER BY ts""", (start, end))
+        rows = await cur.fetchall()
+    return {"delayed": cut is not None, "prices": [
+        {"ts": r[0].isoformat(), "price": r[1]} for r in rows]}
 
 
 @app.get("/api/outages")

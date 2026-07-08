@@ -35,6 +35,12 @@ CREATE INDEX IF NOT EXISTS shifts_ts_idx ON shifts (ts DESC);
 ALTER TABLE shifts ADD COLUMN IF NOT EXISTS snid_from jsonb;
 ALTER TABLE shifts ADD COLUMN IF NOT EXISTS snid_to jsonb;
 
+CREATE TABLE IF NOT EXISTS balancing_prices (
+    ts            timestamptz PRIMARY KEY,
+    price_kr_mwh  double precision NOT NULL,
+    first_seen    timestamptz NOT NULL DEFAULT now()
+);
+
 -- control-room notifications (Tilkynningar frá stjórnstöð) ------------------
 CREATE TABLE IF NOT EXISTS notifications (
     id          uuid PRIMARY KEY,           -- Landsnet's own entry GUID
