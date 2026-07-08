@@ -59,6 +59,16 @@ h1{display:flex;align-items:center;flex-wrap:wrap;column-gap:18px;row-gap:2px;ma
 .access button:hover{background:var(--hydro);border-color:var(--hydro)}
 .access .err{color:var(--magma);font-family:var(--mono);font-size:12px}
 
+/* ---------- balancing price panel ---------- */
+.prices{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 22px 18px}
+.prices .hero .val{color:var(--basalt)}
+.pbar{stroke:none}
+.pbar.up{fill:var(--magma)}
+.pbar.down{fill:var(--hydro)}
+.pbar.mix{fill:#B9C6D6}
+.plegend{display:inline-flex;align-items:center;gap:6px;margin-right:14px}
+.plegend .sw{width:10px;height:10px;border-radius:2px;display:inline-block}
+
 /* ---------- grid events (auto-narrated) ---------- */
 .events{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}
 .events h2{font-family:var(--disp);font-size:20px;font-weight:700;margin-bottom:4px}
@@ -207,7 +217,7 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
   header{padding-top:22px}
   h1{row-gap:6px}
   /* cards breathe less on small screens */
-  .now,.h48,.live,.ntbl,.events{padding:16px 14px;margin-top:18px}
+  .now,.h48,.live,.ntbl,.events,.prices{padding:16px 14px;margin-top:18px}
   /* hero + context stack vertically */
   .metric-row{flex-direction:column;gap:12px}
   .ctx{text-align:left;white-space:normal;padding-top:0}
@@ -270,6 +280,18 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
   <h2 data-i18n="evH2"></h2>
   <div class="sub" data-i18n="evSub"></div>
   <div id="evCards"></div>
+</section>
+
+<section class="prices" id="pricePanel" style="display:none">
+  <div class="metric-row">
+    <div class="hero">
+      <div class="val" id="priceHeroVal">–</div>
+      <div class="sub" id="priceHeroSub"></div>
+    </div>
+    <div class="ctx" id="priceCtx"></div>
+  </div>
+  <div class="chart-wrap" id="priceWrap"></div>
+  <div class="eyebrow belowchart" id="priceCaption"></div>
 </section>
 
 <section class="ntbl" id="notifPanel" style="display:none">
@@ -444,6 +466,16 @@ const I18N={ /* [íslenska, English] */
  heroLiveLbl:["Heildarflutningur á rauntíma","Total flow, live"],
  heroAtLbl:["Heildarflutningur","Total flow"],
  refValueLbl:["Viðmiðunargildi","Reference value"],
+ priceHeroLbl:["Jöfnunarorkuverð","Balancing energy price"],
+ priceUnit:["kr/MWh","ISK/MWh"],
+ priceHigh48:["48 klst. hámark","48 h high"],
+ priceLow48:["48 klst. lágmark","48 h low"],
+ priceAvg48:["48 klst. meðaltal","48 h average"],
+ priceLastHour:["nýjasta verðstund","latest priced hour"],
+ priceUp:["uppreglun ríkjandi","up-regulation dominant"],
+ priceDown:["niðurreglun ríkjandi","down-regulation dominant"],
+ priceMixed:["blandað / hlutlaust","mixed / neutral"],
+ priceCaption:["Jöfnunarorkuverð · súlur = klukkustundir, síðustu 48 klst · litur = ríkjandi staða reglunarafls (REGULATING_POWER): rautt = uppreglun, blátt = niðurreglun, grátt = blandað","Balancing energy price · bars = hours, last 48 h · colour = dominant regulating-power state (REGULATING_POWER): red = up-regulation, blue = down-regulation, grey = mixed"],
  evH2:["Atburðir í kerfinu — sjálfvirk greining","Grid events — automatic analysis"],
  evSub:["Skyndilegar breytingar (≥29 MW á 5 mín) greindar sjálfkrafa út frá heildarflutningi og flutningssniðum kerfisins, tengdar tilkynningum stjórnstöðvar þegar þær birtast.","Sudden changes (≥29 MW in 5 min) detected automatically from total flow and the grid\u2019s transmission-corridor (snið) cuts, linked to control-room notifications when they appear."],
  evDrop:["Fall","Drop"],evRise:["Hækkun","Rise"],
@@ -473,7 +505,7 @@ function applyLang(){
 }
 function setLang(l){
  LANG=l;try{localStorage.setItem("morse_lang",l)}catch(e){}
- applyLang();renderAccessTexts();renderList();loadNotifTable();loadLive();loadEvents();
+ applyLang();renderAccessTexts();renderList();loadNotifTable();loadLive();loadEvents();loadPrices();
 }
 document.getElementById("langIS").onclick=()=>setLang("is");
 document.getElementById("langEN").onclick=()=>setLang("en");
@@ -1039,6 +1071,91 @@ async function loadEvents(){
 }
 loadEvents();
 setInterval(loadEvents,5*60*1000);
+
+
+/* ---------------- balancing prices vs regulation --------------------------- */
+async function loadPrices(){
+ let prices=[],reg=[];
+ try{
+  const r=await fetch("api/prices?days=3",{cache:"no-store"});
+  if(!r.ok)return;                       // endpoint missing or no data yet
+  prices=(await r.json()).prices||[];
+ }catch(e){return}
+ if(prices.length<2){document.getElementById("pricePanel").style.display="none";return}
+ try{
+  const r2=await fetch("api/load?hours=50",{cache:"no-store"});
+  if(r2.ok)reg=((await r2.json()).points||[]).filter(p=>p.regulating_mw!=null);
+ }catch(e){}
+ document.getElementById("pricePanel").style.display="";
+ document.getElementById("priceCaption").textContent=t("priceCaption");
+
+ // hourly dominant regulating direction: mean of the ±1 flags within the hour
+ const regByHour={};
+ reg.forEach(p=>{
+  const h=p.ts.slice(0,13);
+  (regByHour[h]=regByHour[h]||[]).push(p.regulating_mw);
+ });
+ const dirOf=iso=>{
+  const arr=regByHour[iso.slice(0,13)];
+  if(!arr||!arr.length)return "mix";
+  const m=arr.reduce((a,b)=>a+b,0)/arr.length;
+  return m>0.2?"up":m<-0.2?"down":"mix";
+ };
+
+ const rows=prices.slice(-48).map(p=>({...p,dir:dirOf(p.ts),t:new Date(p.ts)}));
+ const vmax=Math.max(...rows.map(r=>r.price)),vmin=Math.min(...rows.map(r=>r.price));
+ const avg=rows.reduce((a,r)=>a+r.price,0)/rows.length;
+
+ // ---- chart: 48 hourly bars ----
+ const W=960,H=230,L=56,R=14,T=18,B=32,PW=W-L-R,PH=H-T-B;
+ const ymax=Math.max(10,Math.ceil(vmax*1.08/500)*500);
+ const y=v=>T+PH-(v/ymax)*PH;
+ const bw=PW/rows.length;
+ let svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Balancing energy price, last 48 hours">`;
+ const step=ymax<=2000?500:ymax<=6000?1000:2000;
+ for(let v=0;v<=ymax;v+=step){
+  svg+=`<line class="hgrid" x1="${L}" y1="${y(v)}" x2="${W-R}" y2="${y(v)}"/>`;
+  svg+=`<text class="aylbl" x="${L-7}" y="${y(v)+3}" text-anchor="end">${fmtNum(v,0)}</text>`;
+ }
+ rows.forEach((r,i)=>{
+  const x0=L+i*bw;
+  svg+=`<rect class="pbar ${r.dir}" x="${(x0+1).toFixed(1)}" y="${y(r.price).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${(T+PH-y(r.price)).toFixed(1)}"/>`;
+ });
+ rows.forEach((r,i)=>{
+  if(r.t.getHours()%6===0)svg+=`<text class="axlbl" x="${(L+i*bw+bw/2).toFixed(1)}" y="${H-14}" text-anchor="middle">${String(r.t.getHours()).padStart(2,"0")}:00</text>`;
+ });
+ rows.forEach((r,i)=>{
+  const x0=L+i*bw;
+  svg+=`<rect class="hhit" data-i="${i}" x="${x0.toFixed(1)}" y="${T}" width="${bw.toFixed(1)}" height="${PH}"/>`;
+ });
+ svg+=`<line class="hgrid" x1="${L}" y1="${T+PH}" x2="${W-R}" y2="${T+PH}" style="stroke:var(--basalt);stroke-width:1.5"/>`;
+ svg+=`</svg>`;
+ document.getElementById("priceWrap").innerHTML=svg;
+
+ // ---- hero + context ----
+ const heroVal=document.getElementById("priceHeroVal"),heroSub=document.getElementById("priceHeroSub");
+ const dirWord=d=>d==="up"?t("priceUp"):d==="down"?t("priceDown"):t("priceMixed");
+ const hh=n=>String(n).padStart(2,"0")+":00";
+ const showBar=i=>{
+  const r=rows[i];
+  heroVal.textContent=fmtNum(r.price,0)+" "+t("priceUnit");
+  const range=(LANG==="is"?"kl. ":"")+hh(r.t.getHours())+"–"+hh((r.t.getHours()+1)%24);
+  heroSub.innerHTML=`${t("priceHeroLbl")} (${fmtDate(r.t,{day:"numeric",month:"short"})}, ${range}) <span class="stns">· ${dirWord(r.dir)}</span>`;
+ };
+ showBar(rows.length-1);
+ const hi=rows.reduce((a,b)=>b.price>a.price?b:a,rows[0]);
+ document.getElementById("priceCtx").innerHTML=
+  `<div>${t("priceHigh48")}: <b>${fmtNum(vmax,0)} ${t("priceUnit")}</b> ${t("atWord")} ${hh(hi.t.getHours())}</div>`+
+  `<div>${t("priceLow48")}: <b>${fmtNum(vmin,0)} ${t("priceUnit")}</b></div>`+
+  `<div>${t("priceAvg48")}: <b>${fmtNum(avg,0)} ${t("priceUnit")}</b></div>`+
+  `<div class="ctx-note">${t("priceLastHour")}: ${fmtDate(rows[rows.length-1].t,{day:"numeric",month:"short",hour:true})}</div>`;
+ document.getElementById("priceWrap").onmousemove=e=>{
+  const r=e.target.closest(".hhit");if(!r)return;
+  showBar(+r.dataset.i);
+ };
+}
+loadPrices();
+setInterval(loadPrices,5*60*1000);
 
 </script>
 </body>
