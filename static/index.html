@@ -117,6 +117,7 @@ table.notifs tr:hover td{background:var(--hydro-soft)}
 .lcons{fill:none;stroke:var(--hydro);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
 .lconsarea{fill:var(--hydro);opacity:.08}
 .notifline{stroke:var(--magma);stroke-width:1.5;stroke-dasharray:3 3}
+.notifhit{fill:transparent;cursor:pointer}
 .notifdot{fill:var(--magma);stroke:#fff;stroke-width:1.5;cursor:pointer}
 .livedot{fill:var(--hydro);stroke:#fff;stroke-width:2;pointer-events:none}
 .live .peak{font-family:var(--mono);font-size:12px;color:var(--steam);text-align:right}
@@ -939,15 +940,19 @@ async function loadLive(){
  svg+=`<path class="lcons" d="${dL}"/>`;
  /* control-room notifications inside the window */
  const inWin=notifs.map(n=>({...n,t:new Date(n.ts).getTime()})).filter(n=>n.t>=t0&&n.t<=t1);
- inWin.forEach((n,i)=>{
+ inWin.forEach(n=>{
   svg+=`<line class="notifline" x1="${x(n.t)}" y1="${T}" x2="${x(n.t)}" y2="${T+PH}"/>`;
-  svg+=`<circle class="notifdot" data-n="${i}" cx="${x(n.t)}" cy="${T+6}" r="6"/>`;
  });
  svg+=`<circle class="livedot" id="livedot" r="4" style="display:none"/>`;
  for(let i=0;i<pts.length;i++){
   const x0=i===0?L:(x(pts[i-1].t)+x(pts[i].t))/2, x1=i===pts.length-1?W-R:(x(pts[i].t)+x(pts[i+1].t))/2;
   svg+=`<rect class="hhit" data-p="${i}" x="${x0.toFixed(1)}" y="${T}" width="${(x1-x0).toFixed(1)}" height="${PH}"/>`;
  }
+ /* dots drawn last = top of the stack, each with a generous invisible hit circle */
+ inWin.forEach((n,i)=>{
+  svg+=`<circle class="notifdot" data-n="${i}" cx="${x(n.t)}" cy="${T+6}" r="6"/>`;
+  svg+=`<circle class="notifhit" data-n="${i}" cx="${x(n.t)}" cy="${T+6}" r="15"/>`;
+ });
  svg+=`<line class="hgrid" x1="${L}" y1="${T+PH}" x2="${W-R}" y2="${T+PH}" style="stroke:var(--basalt);stroke-width:1.5"/>`;
  svg+=`</svg>`;
  document.getElementById("liveWrap").innerHTML=svg;
@@ -976,7 +981,7 @@ async function loadLive(){
  };
  showPoint(pts[pts.length-1]);   // default: the newest reading
  document.getElementById("liveWrap").onmousemove=e=>{
-  const nd=e.target.closest(".notifdot");
+  const nd=e.target.closest(".notifhit")||e.target.closest(".notifdot");
   if(nd){
    const n=inWin[+nd.dataset.n];
    heroVal.textContent="◆ "+hhmm(n.t);
