@@ -30,6 +30,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .db import init_db, pool
+from .forecast import forecast_total_flow, price_backtest
 from .landsnet import poll_measurements, store_reading, parse_payload
 from .orkugatt import crawl_orkugatt
 from .notifications import parse_notifications, store_notifications, poll_notifications
@@ -305,6 +306,32 @@ async def outages(request: Request):
                              "delayed": cut is not None}, status_code=404)
     return {"fetchedAt": row[0].isoformat(), "source": "orkugatt",
             "count": row[1], "operations": row[2], "delayed": cut is not None}
+
+
+# --------------------------------------------------- analysis (login only) ----
+@app.get("/api/forecast")
+async def api_forecast(request: Request, hours: int = Query(48, ge=6, le=72)):
+    """48 h Heildarflutningur forecast. Derived from live data, so it is
+    for logged-in users only — no delayed variant is offered."""
+    if not is_authed(request):
+        return JSONResponse({"error": "login required"}, status_code=401)
+    try:
+        return await forecast_total_flow(hours)
+    except Exception as exc:
+        log.error("forecast failed: %s", exc)
+        return JSONResponse({"error": "forecast failed"}, status_code=500)
+
+
+@app.get("/api/price-model")
+async def api_price_model(request: Request):
+    """Jöfnunarorka price backtest: model vs actual over the last 24 h."""
+    if not is_authed(request):
+        return JSONResponse({"error": "login required"}, status_code=401)
+    try:
+        return await price_backtest()
+    except Exception as exc:
+        log.error("price model failed: %s", exc)
+        return JSONResponse({"error": "price model failed"}, status_code=500)
 
 
 app.mount("/", StaticFiles(directory=os.path.join(
