@@ -64,6 +64,15 @@
   <div class="eyebrow belowchart" id="pmCaption"></div>
 </section>
 
+<section class="ntbl" id="skPanel" style="display:none">
+  <h2 data-i18n="skH2"></h2>
+  <div class="sub" data-i18n="skSub"></div>
+  <div class="scroll"><table class="notifs"><thead>
+    <tr><th data-i18n="skHorizon"></th><th data-i18n="skN"></th><th data-i18n="skMae"></th><th data-i18n="skBias"></th><th data-i18n="skCover"></th></tr>
+  </thead><tbody id="skRows"></tbody></table></div>
+  <div class="foot2" id="skFoot"></div>
+</section>
+
 </div>
 <script src="shared.js"></script>
 <script>
@@ -231,9 +240,42 @@ function renderPriceModel(){
  };
 }
 
-loadForecast();loadPriceModel();
-setInterval(()=>{loadForecast();loadPriceModel();},15*60*1000);
-onLangChange(()=>{renderForecast();renderPriceModel();applyLang();});
+let SK=null;
+async function loadSkill(){
+ try{
+  const r=await fetch("api/forecast-skill?days=14",{cache:"no-store"});
+  if(!r.ok)return;
+  SK=await r.json();
+ }catch(e){return}
+ renderSkill();
+}
+
+function renderSkill(){
+ if(!SK)return;
+ document.getElementById("skPanel").style.display="";
+ const rowsEl=document.getElementById("skRows"),foot=document.getElementById("skFoot");
+ if(SK.error==="no_stored_forecasts"||!SK.horizons||!SK.horizons.length){
+  rowsEl.innerHTML="";
+  foot.textContent=t("skNone");
+  return;
+ }
+ rowsEl.innerHTML=SK.horizons.map(h=>{
+  const cov=Math.round(h.coverage*100);
+  const covCls=cov>=70&&cov<=90?' class="lag fast"':' class="lag"';
+  return `<tr>
+   <td class="mono">${h.from_h}–${h.to_h} ${t("u_h")}</td>
+   <td class="mono">${fmtNum(h.n,0)}</td>
+   <td class="mono"><b>${fmtNum(h.mae,0)} MW</b></td>
+   <td class="mono">${h.bias>0?"+":""}${fmtNum(h.bias,0)} MW</td>
+   <td${covCls}>${cov}%</td>
+  </tr>`;
+ }).join("");
+ foot.textContent=`${t("skCover")}: ${t("skCoverNote")} · ${t("skBias")}: ${t("skBiasNote")} · ${fmtNum(SK.forecasts,0)} × 48 ${t("u_h")}`;
+}
+
+loadForecast();loadPriceModel();loadSkill();
+setInterval(()=>{loadForecast();loadPriceModel();loadSkill();},15*60*1000);
+onLangChange(()=>{renderForecast();renderPriceModel();renderSkill();applyLang();});
 </script>
 </body>
 </html>

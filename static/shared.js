@@ -210,6 +210,16 @@ Object.assign(I18N,{
  f_flow_delta:["breyting flutnings 1 klst","1 h flow change"],
  f_hod_sin:["tími dags (sin)","time of day (sin)"],
  f_hod_cos:["tími dags (cos)","time of day (cos)"],
+ skH2:["Hversu góð er spáin? — frystar spár gegn raunmælingum","How good is the forecast? — frozen forecasts vs reality"],
+ skSub:["Á heilli klukkustund er spáin fryst og geymd óbreytt. Þegar rauntíminn nær spátímanum er hver fryst spá borin saman við raunmælingu — flokkað eftir því hve langt fram í tímann spáin var gerð. Þannig fær 6. klukkustundin sína eigin einkunn, óháð því að spáin uppfærist stöðugt.","On every full hour the forecast is frozen and stored untouched. Once reality catches up, each frozen prediction is graded against the actual measurement — grouped by how far ahead it was made. That way the 6th hour gets its own honest grade, even though the live forecast keeps updating."],
+ skHorizon:["Spátími","Lead time"],
+ skN:["fjöldi","graded"],
+ skMae:["meðalfrávik","typical miss"],
+ skBias:["hneigð","bias"],
+ skCover:["hittni bils","band hit rate"],
+ skCoverNote:["markmið ≈ 80%","target ≈ 80%"],
+ skBiasNote:["+ = spáir of háu, − = of lágu","+ = over-forecasts, − = under"],
+ skNone:["Engar frystar spár enn. Sú fyrsta frystist á næstu heilu klukkustund (xx:31) og einkunnagjöf hefst um leið og raunmælingar ná spátímanum — fyrstu tölur birtast innan 1–2 klst, 48 klst dálkurinn fyllist eftir tvo sólarhringa.","No frozen forecasts yet. The first freezes at the next full hour (xx:31), and grading begins as soon as reality catches up — first numbers appear within 1–2 h, and the 48 h row fills in after two days."],
  lockTitle:["Spásíðan er aðeins fyrir innskráða","The forecast page is for logged-in users"],
  lockBody:["Spáin og verðlíkanið eru unnin úr rauntímagögnum safnsins. Skráðu þig inn efst á síðunni til að opna.","The forecast and price model are derived from the archive's live data. Log in at the top of the page to unlock."]
 });
