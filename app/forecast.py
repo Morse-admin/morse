@@ -244,3 +244,105 @@ async def price_backtest() -> dict:
         "drivers": [[n, c] for n, c in drivers],
         "series": series,
     }
+
+
+# ------------------------------------------------- verification by lead time
+import json as _json
+
+SKILL_BUCKETS = [(0, 1), (1, 3), (3, 6), (6, 12), (12, 24), (24, 48)]
+
+
+async def store_forecast(horizon_hours: int = 48) -> None:
+    """Freeze the current forecast into forecast_log — run hourly.
+    Frozen forecasts are never edited; they exist to be graded later."""
+    try:
+        r = await forecast_total_flow(horizon_hours)
+    except Exception as exc:                     # noqa: BLE001
+        log.error("store_forecast: forecast failed: %s", exc)
+        return
+    if "forecast" not in r:
+        return                                    # archive still too small
+    # Stamp with the forecast's data anchor (the last measurement it was
+    # built on), not the wall clock: lead time then means "hours beyond the
+    # last known measurement", which stays honest even if the feed stalls —
+    # and ON CONFLICT makes a stalled feed freeze each forecast only once.
+    if r.get("history"):
+        made_at = datetime.fromisoformat(r["history"][-1]["ts"])
+    else:
+        made_at = datetime.now(timezone.utc)
+    made_at = made_at.replace(second=0, microsecond=0)
+    async with pool.connection() as conn:
+        await conn.execute(
+            """INSERT INTO forecast_log (made_at, horizon_hours, points)
+               VALUES (%s, %s, %s::jsonb)
+               ON CONFLICT (made_at) DO NOTHING""",
+            (made_at, horizon_hours, _json.dumps(r["forecast"])),
+        )
+    log.info("forecast frozen at %s (%d points)",
+             made_at.isoformat(), len(r["forecast"]))
+
+
+async def forecast_skill(days: int = 14) -> dict:
+    """Grade all frozen forecasts against reality, grouped by lead time.
+
+    For each stored forecast point whose target time has already been
+    measured: error = predicted − actual. Reported per horizon bucket:
+      n         how many predictions were graded
+      mae       mean absolute error (MW) — "typically misses by"
+      bias      mean signed error (MW) — + means it over-forecasts
+      coverage  share of actuals inside the lo–hi band (target ≈ 0.80)
+    """
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    async with pool.connection() as conn:
+        cur = await conn.execute(
+            """SELECT made_at, points FROM forecast_log
+               WHERE made_at > %s ORDER BY made_at""", (since,))
+        fcs = await cur.fetchall()
+        cur = await conn.execute(
+            """SELECT ts, total_mw FROM load_log
+               WHERE total_mw IS NOT NULL AND ts > %s""", (since,))
+        acts = await cur.fetchall()
+    if not fcs:
+        return {"error": "no_stored_forecasts"}
+
+    # actual values averaged into the same 15-min buckets the forecast uses
+    bsum: dict = {}
+    bcnt: dict = {}
+    for ts, v in acts:
+        key = ts.replace(minute=(ts.minute // 15) * 15, second=0, microsecond=0)
+        bsum[key] = bsum.get(key, 0.0) + v
+        bcnt[key] = bcnt.get(key, 0) + 1
+    actual = {k: bsum[k] / bcnt[k] for k in bsum}
+
+    stats = [{"n": 0, "abs": 0.0, "err": 0.0, "cover": 0} for _ in SKILL_BUCKETS]
+    for made_at, points in fcs:
+        if isinstance(points, (str, bytes)):
+            points = _json.loads(points)
+        for p in points:
+            ts = datetime.fromisoformat(p["ts"])
+            a = actual.get(ts)
+            if a is None:
+                continue                          # reality not measured yet
+            h = (ts - made_at).total_seconds() / 3600.0
+            for s, (lo_h, hi_h) in zip(stats, SKILL_BUCKETS):
+                if lo_h <= h < hi_h:
+                    e = p["mw"] - a
+                    s["n"] += 1
+                    s["abs"] += abs(e)
+                    s["err"] += e
+                    if p["lo"] <= a <= p["hi"]:
+                        s["cover"] += 1
+                    break
+
+    horizons = []
+    for s, (lo_h, hi_h) in zip(stats, SKILL_BUCKETS):
+        if s["n"] == 0:
+            continue
+        horizons.append({
+            "from_h": lo_h, "to_h": hi_h, "n": s["n"],
+            "mae": round(s["abs"] / s["n"], 1),
+            "bias": round(s["err"] / s["n"], 1),
+            "coverage": round(s["cover"] / s["n"], 3),
+        })
+    return {"forecasts": len(fcs), "days": days,
+            "oldest": fcs[0][0].isoformat(), "horizons": horizons}

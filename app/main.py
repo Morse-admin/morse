@@ -30,7 +30,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .db import init_db, pool
-from .forecast import forecast_total_flow, price_backtest
+from .forecast import forecast_total_flow, price_backtest, store_forecast, forecast_skill
 from .landsnet import poll_measurements, store_reading, parse_payload
 from .orkugatt import crawl_orkugatt
 from .notifications import parse_notifications, store_notifications, poll_notifications
@@ -88,6 +88,8 @@ async def lifespan(app: FastAPI):
                           id="measurements", max_instances=1, coalesce=True)
     scheduler.add_job(crawl_orkugatt, CronTrigger(minute=7),
                       id="orkugatt", max_instances=1, coalesce=True)
+    scheduler.add_job(store_forecast, CronTrigger(minute=31),
+                      id="forecast_store", max_instances=1, coalesce=True)
     if os.environ.get("POLL_NOTIFICATIONS", "0") == "1":
         scheduler.add_job(poll_notifications, CronTrigger(minute="*/5"),
                           id="notifications", max_instances=1, coalesce=True)
@@ -332,6 +334,18 @@ async def api_price_model(request: Request):
     except Exception as exc:
         log.error("price model failed: %s", exc)
         return JSONResponse({"error": "price model failed"}, status_code=500)
+
+
+@app.get("/api/forecast-skill")
+async def api_forecast_skill(request: Request, days: int = Query(14, ge=1, le=90)):
+    """How good were the frozen forecasts, by lead time."""
+    if not is_authed(request):
+        return JSONResponse({"error": "login required"}, status_code=401)
+    try:
+        return await forecast_skill(days)
+    except Exception as exc:
+        log.error("forecast skill failed: %s", exc)
+        return JSONResponse({"error": "skill report failed"}, status_code=500)
 
 
 app.mount("/", StaticFiles(directory=os.path.join(

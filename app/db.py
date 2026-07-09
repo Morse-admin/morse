@@ -51,6 +51,13 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 CREATE INDEX IF NOT EXISTS notifications_ts_idx ON notifications (ts DESC);
 
+-- hourly frozen forecasts, for verification by lead time ---------------------
+CREATE TABLE IF NOT EXISTS forecast_log (
+    made_at        timestamptz PRIMARY KEY,  -- when this forecast was frozen
+    horizon_hours  int NOT NULL,
+    points         jsonb NOT NULL            -- [{ts, mw, lo, hi}, ...]
+);
+
 -- hourly snapshots of the Orkugátt outage schedule --------------------------
 CREATE TABLE IF NOT EXISTS outage_snapshots (
     fetched_at  timestamptz PRIMARY KEY,
